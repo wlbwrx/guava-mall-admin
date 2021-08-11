@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Home</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<link rel="stylesheet" href="../dists/hint/hint.css"/>
+		<link rel="stylesheet" href="../dists/select2/dist/css/select2.css" />
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+            td .orderChildLine:last-child{margin-bottom: 0;}
+            .orderChildLine{height: 50px;margin-bottom: 10px;display: flex;justify-content: center;flex-wrap: wrap-reverse;align-items: center;}
+            .orderChildLine > span {width: 100%;display: block;}
+            .orderChildLine img{min-width: 50px;max-width: 50px;width: 50px;}
+		</style>
+	</head>
+	<body>
+        <div class="container-fluid">
+            <div class="panel panel-headline">
+                <div class="panel-heading">
+                    <div class="left">
+                        <h3 class="panel-title">订单审核</h3>
+                        <div class="toolBox btn-group">
+                            <button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i> 搜索</button>
+                        </div>
+                    </div>
+                    <div class="toolBox btn-group right">
+                        <button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+                    </div>
+                </div>
+                
+                <div class="panel-body">
+                    <div id="toolbar" class="btn-group">
+                        <input type="text" class="form-control" name="code" placeholder="输入订单号">
+                        <input type="text" class="form-control" name="productId" placeholder="输入条形码">
+                        <input type="text" class="form-control" name="productTitle" placeholder="输入品名">
+                        <button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+                    </div>
+                    <table id="table-products"></table>
+                </div>
+            </div>
+        </div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+	<script type="text/javascript" src="../dists/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../js/bootstrap-table-template.js"></script>
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+    <script type="text/javascript" src="../dists/select2/dist/js/select2.full.min.js"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+	<script type="text/javascript">
+		var app = {
+			data : {
+				table : $("#table-products"),
+                warehouseData: [],
+                expressCompany:['顺丰快递', 'ems', '百世快递', '宅急送', '中通快递', '申通快递', '圆通快递', '韵达快递', '天天快递', '德邦快递'],
+			},
+			methods : {
+                searchTable : function(){
+					app.data.table.bootstrapTable('refresh');
+                },
+                showSearchView: function () {
+                    $('#toolbar .form-inline').toggle()
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-down')
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-up')
+                    app.methods.initBootstrapTableStyle();
+                },
+                initBootstrapTableStyle: function(){
+                    $('.panel .panel-body .bootstrap-table').css({
+                        'height':'calc(100% - '+$('#toolbar').outerHeight(true)+'px)'
+                    })
+                    $('.panel .panel-body .bootstrap-table .fixed-table-container').css({
+                        'height':'calc(100% - '+$('.panel .panel-body .bootstrap-table .fixed-table-container .fixed-table-pagination').outerHeight(true)+'px)'
+                    })
+                },
+				initTable : function(){
+					app.data.table.bootstrapTable({
+						pagination : true , 
+						cache: false,
+						sortable: false,
+						sidePagination: "server",
+						clickToSelect : true,
+						templateView : false,
+						showHeader : true,
+						pageNumber : 1 , 
+						pageSize : 15 , 
+						pageList : [15 , 30 , 45 , 90],
+						toolbarAlign : 'left',
+						queryParamsType : 'page' ,
+						queryParams : function(params){
+                            var code = $('#toolbar input[name=code]').val().trim();
+                            if(code){
+                                params.orderCode = code;
+                            }
+							params.productSkuBarcode = $('#toolbar input[name=productId]').val().trim();
+							params.productTitle = $('#toolbar input[name=productTitle]').val().trim();
+							params.size = params.pageSize;
+							params.page = parseInt(params.pageNumber)-1;
+							return params;
+						},
+                        url: utils.prePath() + '/api/admin/order/pending/approval/list',
+						totalField: 'body.totalElements',
+        				dataField: 'body.content',
+					    columns: app.methods.optionByAuthority(),
+					    onLoadSuccess : function(data){
+							tableUi.initBootstrapTable();
+					    },
+						onLoadError: function(result){
+							if(result == 403){
+								toastr.error("不允许访问")
+							}else{
+								toastr.error('系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+                },
+                preview : function(id){
+					layer.open({
+					  	type: 2,
+					  	title: '产品预览',
+					  	maxmin : true,
+					  	shadeClose: true,
+					  	resize : false,	
+					  	shade: 0.8,
+                        area: ['392px', '710px'],
+                        skin:'preview',  
+					  	content: utils.perviewPath(id)
+					});
+				},
+                optionByAuthority: function () {
+                    // 管理员
+                    var option = [{
+                        field: 'code',
+                        title: '订单号',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        title: '商品图',
+                        align: 'center',
+                        width : 60,
+                        minWidth : 60,
+                        formatter: function (value, row, index, field) {
+                            var dom = '';
+                            row.orderProducts.map(function(e){
+                                dom += '<div class="orderChildLine"><a href="#" onclick = "app.methods.preview('+e.productId+');"><img src="'+e.productImageUrl+'" alt="'+e.productTitle+'" class="img-responsive proImage"></a></div>'
+                            });
+                            return dom;
+                        }
+                    }, {
+                        title: '品名',
+                        align: 'center',
+                        minWidth : 200,
+                        formatter: function (value, row, index, field) {
+                            var dom = '';
+                            row.orderProducts.map(function(e){
+                                dom += '<div class="orderChildLine"><span class="text-length-table-col">' + (e.productTitle || '--') + '</span></div>'
+                            });
+                            return dom;
+                        }
+                    }, {
+                        title: '规格',
+                        align: 'center',
+                        minWidth : 100,
+                        formatter: function (value, row, index, field) {
+                            var dom = '';
+                            row.orderProducts.map(function(e){
+                                dom += '<div class="orderChildLine"><span class="text-length-table-col">' + (e.productSkuName || '--') + '</span></div>'
+                            });
+                            return dom;
+                        }
+                    }, {
+                        title: '数量',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var dom = '';
+                            row.orderProducts.map(function(e){
+                                dom += '<div class="orderChildLine"><span class="text-length-table-col">' + (e.quantity || '--') + '</span></div>'
+                            });
+                            return dom;
+                        }
+                    },{
+                        title: '操作',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var id = row.id;
+                            return '<button type="button" class="btn btn-info btn-sm" onclick="app.methods.confirmOrder(' + id + ')">确认订单</button>'+
+                            '<a type="button" class="simpleBtn" onclick="app.methods.cancelOrder(' + id + ')">取消订单</a>'
+                        }
+                    }, {
+                        title: '条形码',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var dom = '';
+                            row.orderProducts.map(function(e){
+                                dom += '<div class="orderChildLine"><span class="text-length-table-col">' + (e.productSkuBarcode || '--') + '</span></div>'
+                            });
+                            return dom;
+                        }
+                    }, {
+                        title: '留言',
+                        minWidth: 80,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var maxLength = 12;
+                            var noteVal = row.message;
+                            var note = "'" + row.message + "'";
+                            if (noteVal.split('').length > maxLength) {
+                                return '<span class="text-length-table-col">' + noteVal.slice(0, maxLength + 1) +
+                                    '</span><a class="simpleBtn" href="#" onclick="app.methods.showNote(' + note + ')">查看全部</a>';
+                            } else {
+                                return '<span class="text-length-table-col">' + noteVal + '</span>';
+                            }
+                        }
+                    }, {
+                        title: '总件数',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            var pub = 0;
+                            row.orderProducts.map(function(e){
+                                pub += (e.quantity - 0);
+                            });
+                            return '<div class="orderChildLine"><span class="text-length-table-col">' + (pub || '--') + '</span></div>';
+                        }
+                    }, {
+                        title: '姓名',
+                        minWidth: 80,
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (row.orderAddress.consignee || '--') + '</span>';
+                        }
+                    }, {
+                        title: '电话',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (row.orderAddress.tel || '--') + '</span>';
+                        }
+                    },{
+                        title: '地址',
+                        minWidth: 120,
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + row.orderAddress.city + row.orderAddress.district + row.orderAddress.detail + '</span>';
+                        }
+                    }];
+                    return option;
+                },
+                showNote: function(detail){
+                    layer.alert(detail);
+                },
+                confirmOrder: function(id){
+                    $.ajax({
+						type: "put",
+						url: utils.prePath() + "/api/admin/order/"+id+"/confirm",
+						success: function (result) {
+							if (result.statusCode == 'OK') {
+                                toastr.success((result.body && result.body.message) ? result.body.message : '订单确认成功...');
+                                app.data.table.bootstrapTable('refresh');
+							} else {
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+                },
+                cancelOrder: function(id){
+                    $.ajax({
+						type: "put",
+						url: utils.prePath() + "/api/admin/order/"+id+"/cancel",
+						success: function (result) {
+							if (result.statusCode == 'OK') {
+								toastr.success((result.body && result.body.message) ? result.body.message : '订单取消成功...');
+                                app.data.table.bootstrapTable('refresh');
+							} else {
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+                },
+                initSelect2 : function(){
+                    // 接收仓库选择器
+					$.ajax({
+						type: "get",
+						url: utils.prePath() + "/api/admin/warehouse/list",
+						async: false,
+						success: function (result) {
+							if (result.statusCode == 'OK') {
+								var data = [];
+								result.body.map(function(e){
+									data.push({
+										id: e.id,
+										text: e.warehouseName
+									})
+								})
+								app.data.warehouseData = data;								
+							} else {
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+                },
+                enterKey : function(){
+					$('#toolbar').keyup(function(event){
+					  	if(event.keyCode ==13){
+					    	app.methods.searchTable();
+					  	}
+					});
+				},
+            },
+            event:{
+                chooseWarehouse: function () {
+                    $('#table-products').on('change', '.warehouseSelect', function () {
+                        var productSkuBarcode = $(this).data('productskubarcode')
+                        var id = $(this).data('id')
+                        $.ajax({
+                            type: "get",
+                            url: utils.prePath() + "/api/admin/warehouse/inventory/"+$(this).val()+"/"+productSkuBarcode,
+                            success: function (result) {
+                                if (result.statusCode == 'OK') {
+                                    console.log(result)
+                                    $('.pubNumber[data-index='+id+']').text(productskuid)
+                                } else {
+                                    toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                                }
+                            }
+                        });
+                    })
+                },
+                init:function () {
+                    app.event.chooseWarehouse();
+                }
+            },
+			init : function(){
+				app.methods.initSelect2();
+				app.methods.initTable();
+				app.methods.enterKey();
+				app.event.init();
+			}
+		}
+		
+		$(function(){
+			app.init();
+		});
+	</script>
+</html>

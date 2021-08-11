@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>价格查询</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/bootstrap-select/css/bootstrap-select.min.css" />
+		<link rel="stylesheet" href="../dists/easyui/themes/bootstrap/easyui.css">
+        <link rel="stylesheet" href="../dists/daterangepicker/daterangepicker.css" />
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<!-- <link rel="stylesheet" href="../dists/hint/hint.css"/> -->
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+        <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+        <style>
+			.productInfoAdBox li span:nth-child(10){display: none;}
+			#analysisMes {line-height: 18px;font-size: 14px;padding: 5px 6px;}
+			#toolbar.btn-group .span-input-time{
+				max-width: 150px;
+				width: auto;
+				height: 34px;
+				line-height: 34px;
+				margin-left: 10px;
+			}
+			.newCateLevel{
+				border:1px solid #d6d6d6;cursor:pointer;position:relative;
+			}
+			.newCateLevel .bs-caret{
+				position:absolute;top: 7px;right: 10px;
+			}
+			.levelName{
+				font-size: 14px;margin-top: 6px;float: left;margin-left: 14px;
+			}
+			.levelDetail{
+				width:230px;height: 300px;
+				overflow: auto;position: absolute;top: 35px;left: 0;
+				background: #fff;z-index: 1;border: 1px solid #ddd;
+			}
+			.newtree {
+				min-height:20px;
+				margin-bottom:20px;
+			}
+			.newtree li {
+				list-style-type:none;
+				margin:0;
+				padding:10px 5px 0 5px;
+				position:relative
+			}
+			.newtree li::before, .newtree li::after {
+				content:'';
+				left:-20px;
+				position:absolute;
+				right:auto
+			}
+			[class^="icon-"], [class*=" icon-"]{
+				display: inline-block;
+				width: 14px;
+				height: 14px;
+				margin-right: .3em;
+				line-height: 14px;
+				vertical-align: text-top;
+				background-image: url(../img/glyphicons-halflings.png);
+				background-position: 0 -96px;
+				background-repeat: no-repeat;
+			}
+			.newtree li::before {
+				border-left:1px solid #999;
+				bottom:50px;
+				height:100%;
+				top:0;
+				width:1px
+			}
+			.newtree li::after {
+				border-top:1px solid #999;
+				height:20px;
+				top:25px;
+				width:25px
+			}
+			.newtree li span {
+				-moz-border-radius:5px;
+				-webkit-border-radius:5px;
+				border:1px solid #999;
+				border-radius:5px;
+				display:inline-block;
+				padding:3px 8px;
+				text-decoration:none;
+				background:#fff;color:#333;
+			}
+			.newtree li span:hover{
+				background:#f2f2f2;
+			}
+			.newtree li.parent_li>span {
+				cursor:pointer
+			}
+			.newtree>ul>li::before, .newtree>ul>li::after {
+				border:0
+			}
+			.newtree li.parent_li>span:hover, .newtree li.parent_li>span:hover+ul li span {
+				background:#eee;
+				border:1px solid #94a0b4;
+				color:#000
+			}
+			.icon-folder-open{
+				width: 16px;
+    			background-position: -408px -120px;
+			}
+			.icon-plus-sign{
+				background-position: 0 -96px;
+			}
+			.icon-minus-sign{
+				/* background-position: -24px -96px; */
+			}
+			.icon-time{
+				background-position: -192px -120px;
+			}
+            .dropdown-menu.open{
+                max-width:400px;
+            }
+			span.scopedPrice{
+				display:block;
+			}
+			span.scopedPrice:nth-child(2){
+				border-top:1px solid #eee;
+				padding-top:8px;
+				margin-top:5px;
+			}
+			table span.textRed{
+				color:red !important;
+			}
+        </style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="panel panel-headline">
+				<div class="panel-heading">
+					<div class="left">
+						<h3 class="panel-title">价格查询(商品)</h3>
+						<div class="toolBox btn-group">
+							<button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i>&nbsp; 搜索 </button>
+							<button class="btn btn-success btn-sm export" onclick="app.methods.exportDown()"><i class="fa fa-download"></i>&nbsp;&nbsp;导出</button>
+							<span id="analysisMes"></span>
+						</div>	
+					</div>	
+					<div class="toolBox btn-group right">
+						<button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+					</div>
+				</div>
+				<div class="panel-body">
+					<div id="toolbar" class="btn-group">
+                        <select name="scopeId" class="selectpicker" data-live-search="true" data-title="全部商城"></select>
+                        <input class="classify" name="categoryId" style="width:100%;">
+						<!-- <select name="categoryLevel" class="selectpicker categoryLevel" data-live-search="true">
+							<option value="1">一级分类</option>
+							<option value="2">二级分类</option>
+							<option value="3">三级分类</option>
+						</select> -->
+                        <!-- <input class="classify" name="categoryId" style="width:100%;"> -->
+                        <input type="text" class="form-control" name="ids" placeholder="商品ID">
+						<span class="span-input-time">创建时间：</span><input type="text" inputTpye="daterange" rangeStart="productCreatedBeginTime" rangeEnd="productCreatedEndTime" class="form-control" name="orderTimes" placeholder="请选择创建时间" />
+						<span class="span-input-time">上架时间：</span><input type="text" inputTpye="daterange" rangeStart="upDownBeginTime" rangeEnd="upDownEndTime" class="form-control" name="shelftTimes" placeholder="请选择上架时间" />
+                        <input type="text" class="form-control" name="createdBy" placeholder="创建人">
+						<select name="status" class="selectpicker" data-live-search="true">
+							<option value="">全部产品状态</option>
+							<option value="-1">创建失败</option>
+							<option value="0">创建中</option>
+							<option value="1">已创建</option>
+							<option value="10">上架</option>
+							<option value="20">下架</option>
+						</select>
+                        <button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+					</div>
+					<table id="table-main" style="word-break: break-all;"></table>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+    <script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-select/js/bootstrap-select.min.js" ></script>    
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+    <script type="text/javascript" src="../dists/daterangepicker/daterangepicker.min.js"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+	<script type="text/javascript" src="../dists/easyui/jquery.easyui.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../dists/easyui/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+	<script type="text/javascript">
+		var app = {
+			data : {
+				table : $("#table-main"),
+				procurementOf: tools.globalSetting('procurementOf') // 采购占比变量
+			},
+			methods : {
+				initTable : function(){
+					// var authority_data = authoritys.useAuthority();
+					// if(!authority_data){
+					// 	toastr.error("权限不足，不允许访问...")
+					// 	return;
+					// }
+					app.data.table.bootstrapTable(Object.assign(tableUi.data.tableOption_page, {
+						sortable: true,
+						url: utils.prePath() + '/api/admin/product/price/analysis',
+						queryParams : function(params){
+                            params.size = params.pageSize;
+                            params.page = parseInt(params.pageNumber)-1;
+							params.sortName && params.sortOrder && (params.sort = params.sortName + ',' + params.sortOrder);
+							
+							params.queryCategoryLevel = $('#levelName').attr('data-level')
+							params.queryCategoryId = $('#levelName').attr('data-id')
+							
+							delete params['pageSize'];
+                            delete params['pageNumber'];
+                            delete params['sortName'];
+                            delete params['sortOrder'];
+                            return Object.assign(params, tools.getParams('#toolbar'));
+                        },
+						columns: app.methods.optionByAuthority(),
+						onLoadSuccess : function(data){
+							tableUi.initBootstrapTable();
+							authoritys.useAuthority();
+					    },
+					}));
+				},
+				exportDown:function(){
+					let newParam = Object.assign({}, tools.getParams('#toolbar'))
+					tools.exportByFrom('/api/admin/product/price/analysis/export',newParam);
+				},
+                optionByAuthority: function () {
+                    var option = [{
+						field: 'productId',title: '商品ID',align: 'center'
+					},{
+                        field: 'productImg',title: '商品图片',align: 'center',
+						formatter: function(value, row, index, field) {
+							return '<img src="'+value+'" alt="'+row.title+'" onclick = "tools.previewPro('+row.id+');" class="img-responsive proImage">';
+						}
+					},{
+						field: 'productTitle',title: '商品名称',align: 'center',width: 200
+					},{
+						field: 'category1Name',title: '商品分类(一级/二级/三级)',align: 'center',width: 200,
+						formatter: function(value, row, index, field) {
+							return (row.category1Name != null ? row.category1Name : '--') + '/' + (row.category2Name != null ? row.category2Name : '--') + '/' + (row.category3Name != null ? row.category3Name : '--')
+						}
+					}, {
+						field: 'minPurchasePrice',title: '商品采购价(￥)',align: 'center',
+						formatter: function(value, row, index, field) {
+							return  row.minPurchasePrice + '~' +row.maxPurchasePrice
+						}
+					},{
+						field: 'scopeIds',title: '商城',align: 'center',
+						formatter: function(value, row, index, field) {
+							let scopeNow1 = $('select[name="scopeId"]').val()
+							if(value != null){
+								let scopeNow = value.split(',')  
+								if(scopeNow.indexOf('8') > -1 && scopeNow.indexOf('18') > -1){
+									if(scopeNow1 == 8){
+										return '<span class="scopedPrice">阿噗特賣</span>'
+									}else if(scopeNow1 == 18){
+										return '<span class="scopedPrice">折多多</span>'
+									}else{
+										return '<span class="scopedPrice">阿噗特賣</span><span class="scopedPrice">折多多</span>'
+									}
+								}else if(scopeNow.indexOf('8') > -1){
+									return '<span class="scopedPrice">阿噗特賣</span>'
+								}else if(scopeNow.indexOf('18') > -1){
+									return '<span class="scopedPrice">折多多</span>'
+								}
+							}else{
+								return '<span class="scopedPrice">--</span>'
+							}
+
+							// let scopeNow = $('select[name="scopeId"]').val()
+							// if(scopeNow == 8){
+							// 	return '<span class="scopedPrice">阿噗特賣</span>'
+							// }else if(scopeNow == 18){
+							// 	return '<span class="scopedPrice">折多多</span>'
+							// }else{
+							// 	return '<span class="scopedPrice">阿噗特賣</span><span class="scopedPrice">折多多</span>'
+							// }
+						}
+					},{
+						field: 'minDepletionPrice',title: '出清价/折扣价(NT$)',align: 'center',
+						formatter: function(value, row, index, field) {
+							let scopeNow1 = $('select[name="scopeId"]').val()
+							if(row.scopeIds != null){
+								let scopeNow = row.scopeIds.split(',')
+								if(scopeNow.indexOf('8') > -1 && scopeNow.indexOf('18') > -1){
+									if(scopeNow1 == 8){
+										return '<span class="scopedPrice">' + (row.minDepletionPrice != null ? row.minDepletionPrice : '--') + '~' + (row.maxDepletionPrice != null ? row.maxDepletionPrice : '') + '</span>'
+									}else if(scopeNow1 == 18){
+										return '<span class="scopedPrice">' + (row.minZddPrice != null ? row.minZddPrice : '--') +'~'+ (row.maxZddPrice != null ? row.maxZddPrice : '--') + '</span>'
+									}else{
+										return '<span class="scopedPrice">' + (row.minDepletionPrice != null ? row.minDepletionPrice : '--') + '~' + (row.maxDepletionPrice != null ? row.maxDepletionPrice : '--') + '</span><span class="scopedPrice">' + (row.minZddPrice != null ? row.minZddPrice : '--') + '~' + (row.maxZddPrice != null ? row.maxZddPrice : '--')+ '</span>'
+									}
+								}else if(scopeNow.indexOf('8') > -1){
+									return '<span class="scopedPrice">' + (row.minDepletionPrice != null ? row.minDepletionPrice : '--') + '~' + (row.maxDepletionPrice != null ? row.maxDepletionPrice : '') + '</span>'
+								}else if(scopeNow.indexOf('18') > -1){
+									return '<span class="scopedPrice">' + (row.minZddPrice != null ? row.minZddPrice : '--') +'~'+ (row.maxZddPrice != null ? row.maxZddPrice : '--') + '</span>'
+								}
+							}else{
+								return '<span class="scopedPrice">--</span>'
+							}
+
+							// let scopeNow1 = $('select[name="scopeId"]').val()
+							// if(scopeNow1 == 8){
+							// 	return '<span class="scopedPrice">' + (row.minDepletionPrice != null ? row.minDepletionPrice : '--') + '~' + (row.maxDepletionPrice != null ? row.maxDepletionPrice : '') + '</span>'
+							// }else if(scopeNow1 == 18){
+							// 	return '<span class="scopedPrice">' + (row.minZddPrice != null ? row.minZddPrice : '--') +'~'+ (row.maxZddPrice != null ? row.maxZddPrice : '--') + '</span>'
+							// }else{
+							// 	return '<span class="scopedPrice">' + (row.minDepletionPrice != null ? row.minDepletionPrice : '--') + '~' + (row.maxDepletionPrice != null ? row.maxDepletionPrice : '--') + '</span><span class="scopedPrice">' + (row.minZddPrice != null ? row.minZddPrice : '--') + '~' + (row.maxZddPrice != null ? row.maxZddPrice : '--')+ '</span>'
+							// }
+						}
+					}, {
+						field: 'minPercentagePurchase',title: '采购占比(%)',align: 'center',
+						formatter: function (value, row, index, field){
+							let scopeNow1 = $('select[name="scopeId"]').val()
+							// 全局参数变量
+							let globalValue = app.data.procurementOf
+							if(row.scopeIds != null){
+								let scopeNow = row.scopeIds.split(',')
+								if(scopeNow.indexOf('8') > -1 && scopeNow.indexOf('18') > -1){
+									if(scopeNow1 == 8){
+										return '<span class="scopedPrice">' + '<span class="' + (row.minPercentagePurchase > globalValue ? ' textRed' : '') + '">' + row.minPercentagePurchase + '</span>' + '~' + '<span class="' + (row.maxPercentagePurchase > globalValue ? ' textRed' : '') + '">' +row.maxPercentagePurchase +' </span></span>'
+									}else if(scopeNow1 == 18){
+										return  '<span class="scopedPrice">' + '<span class="' + (row.minPercentagePurchaseZdd > globalValue ? ' textRed' : '') + '">' + row.minPercentagePurchaseZdd + '</span>' +'~' + '<span class="' + (row.maxPercentagePurchaseZdd > globalValue ? ' textRed' : '') + '">' + row.maxPercentagePurchaseZdd + '</span></span>'
+									}else{
+										return '<span class="scopedPrice">' + '<span class="' + (row.minPercentagePurchase > globalValue ? ' textRed' : '') + '">' + row.minPercentagePurchase + '</span>' +'~' +  '<span class="' + (row.maxPercentagePurchase > globalValue ? ' textRed' : '') + '">' + row.maxPercentagePurchase + '</span></span><span class="scopedPrice">'+ '<span class="' + (row.minPercentagePurchaseZdd > globalValue ? ' textRed' : '') + '">' + row.minPercentagePurchaseZdd + '</span>' + '~' + '<span class="' + (row.maxPercentagePurchaseZdd > globalValue ? ' textRed' : '') + '">' + row.maxPercentagePurchaseZdd +'</span></span>'
+									}
+								}else if(scopeNow.indexOf('8') > -1){
+									return '<span class="scopedPrice">' + '<span class="' + (row.minPercentagePurchase > globalValue ? ' textRed' : '') + '">' + row.minPercentagePurchase + '</span>' + '~' + '<span class="' + (row.maxPercentagePurchase > globalValue ? ' textRed' : '') + '">' + row.maxPercentagePurchase + '</span></span>'
+								}else if(scopeNow.indexOf('18') > -1){
+									return  '<span class="scopedPrice">' + '<span class="' + (row.minPercentagePurchaseZdd > globalValue ? ' textRed' : '') + '">' + row.minPercentagePurchaseZdd + '</span>' + '~' + '<span class="' + (row.maxPercentagePurchaseZdd > globalValue ? ' textRed' : '') + '">' + row.maxPercentagePurchaseZdd + '</span></span>'
+								}
+							}else{
+								return '<span class="scopedPrice">--</span>'
+							}
+
+							// let scopeNow1 = $('select[name="scopeId"]').val()
+							// if(scopeNow1 == 8){
+							// 	return '<span class="scopedPrice">' +  row.minPercentagePurchase + '~' + row.maxPercentagePurchase + '</span>'
+							// }else if(scopeNow1 == 18){
+							// 	return  '<span class="scopedPrice">' + row.minPercentagePurchaseZdd +'~' + row.maxPercentagePurchaseZdd + '</span>'
+							// }else{
+							// 	return '<span class="scopedPrice">' + row.minPercentagePurchase + '~' + row.maxPercentagePurchase + '</span><span class="scopedPrice">'+ row.minPercentagePurchaseZdd +'~' + row.maxPercentagePurchaseZdd +'</span>'
+							// }
+						}
+					}, {
+						field: 'createdBy',title: '创建人',align: 'center',
+					}];
+                    return option;
+				},
+				initSelect : function(){
+					tools.renderSelect.scope('select[name="scopeId"]');
+					tools.rangeTime('input[name="orderTimes"]');
+                    tools.rangeTime('input[name="shelftTimes"]');
+                    tools.renderSelect.categoryTree('.classify');
+					$('.newCateLevel').on('click', function(e){
+						$('.levelDetail').toggle()
+						e.stopPropagation();
+					})
+					$('.categoryLevel').on('change', function(){
+						let thisValue = $(this).val()
+						app.methods.newTree(thisValue)
+					})
+				},
+				newTree: function(type){
+					// 加載接口
+
+					$.ajax({
+                        type:'GET',
+						url: utils.prePath() + "/api/admin/erp/category/tree",
+						success: function(response){
+							let showFlet = ''
+							if(response.statusCode == 'OK'){
+								if(type == 1){
+									response.body.map((item, index) => {
+										showFlet +=
+											`<li>
+												<span data-id="${item.id}" data-name="${item.name}" data-level="1"><i class="icon-minus-sign"></i>${item.name}</span>
+											</li>`
+									})
+									$('#newtreeIn').html(showFlet)
+								}else if(type == 2){
+									response.body.map((item, index) => {
+										let showFletIn = ''
+										item.adminCategories.map((itemc, index)=> {
+											showFletIn += 
+											   `<ul>
+													<li style="display:none;">
+														<span data-id="${itemc.id}" data-name="${itemc.name}" data-level="2"><i class="icon-minus-sign icon-time"></i>${itemc.name}</span>
+													</li>
+												</ul>`
+										})
+										showFlet +=
+											`<li>
+												<span data-id="${item.id}" data-name="${item.name}" data-level="1"><i class="icon-minus-sign"></i>${item.name}</span>
+												${showFletIn}
+											</li>`
+									})
+									$('#newtreeIn').html(showFlet)
+								}else if(type == 3){
+									response.body.map((item, index) => {
+										let showFletIn = ''
+										item.adminCategories.map((itemc, index) => {
+											let showFletInIn = ''
+											itemc.adminCategories.map((itemcc, index) => {
+												showFletInIn += 
+													`<ul>
+														<li style="display:none;">
+															<span data-id="${itemcc.id}" data-name="${itemcc.name}"  data-level="3"><i class="icon-minus-sign icon-time"></i>${itemcc.name}</span>
+														</li>
+													</ul>`
+											})
+											showFletIn +=
+												`<ul><li style="display:none;">
+													<span data-id="${itemc.id}" data-name="${itemc.name}"  data-level="2"><i class="icon-minus-sign"></i>${itemc.name}</span>
+													${showFletInIn}
+												</li></ul>`
+										})
+										showFlet +=
+											`<li>
+												<span data-id="${item.id}" data-name="${item.name}" data-level="1"><i class="icon-minus-sign"></i>${item.name}</span>
+												${showFletIn}
+											</li>`
+									})
+									$('#newtreeIn').html(showFlet)
+								}
+
+								// DOM处理
+								
+								$('.newtree li:has(ul)').addClass('parent_li').find(' > span').attr('title', 'Collapse this branch');
+
+								$('.newtree li.parent_li > span > i').on('click', function (e) {
+									var $that = $(this).parent('span') 
+									var children = $that.parent('li.parent_li').find(' > ul > li');
+
+									if (children.is(":visible")) {
+
+										children.hide('fast');
+
+										$that.attr('title', '').find(' > i').addClass('icon-plus-sign').removeClass('icon-minus-sign');
+
+									} else {
+
+										children.show('fast');
+
+										$that.attr('title', '').find(' > i').addClass('icon-minus-sign').removeClass('icon-plus-sign');
+
+									}
+
+									e.stopPropagation();
+
+								});
+								$('.newtree li > span').on('click', function(e){
+									$('#levelName').attr({
+										'data-id': $(this).attr('data-id'),
+										'data-level': $(this).attr('data-level')
+									}).text($(this).attr('data-name'))
+								})
+							}
+						}
+					})
+
+				}
+			},
+			init : function(){
+				app.methods.initSelect();
+				app.methods.initTable();
+				app.methods.newTree(1);
+				tools.toolbarEnterEvent(function(){app.data.table.bootstrapTable('refresh')});
+			}
+		}
+		$(function(){
+			app.init();
+			$(document).click(function () {
+				$(".levelDetail").hide();
+			});
+		});
+	</script>
+</html>

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Home</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<link rel="stylesheet" href="../dists/hint/hint.css"/>
+		<link rel="stylesheet" href="../dists/select2/dist/css/select2.css" />
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+            .orderTable input[type="number"]{width: 50px;}
+            .orderTable td,.orderTable th{text-align: center;}
+            .orderTable img{height: 42px;width: 42px;}
+
+            .formBox{display: flex;}
+            .formBox div{flex: 1;margin-right: 6px;}
+            .proImage{min-width: 50px;max-width: 50px;width: 50px;}
+
+            .tabBox{max-height: 80vh;}
+		</style>
+	</head>
+	<body>
+        <div class="container-fluid">
+            <div class="panel panel-headline">
+                <div class="panel-heading">
+                    <div class="left">
+                        <h3 class="panel-title">出库-待发货</h3>
+                        <div class="toolBox btn-group">
+                            <button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i> 搜索</button>
+                            <button class="btn btn-success btn-sm" onclick="app.methods.unpack();"><i class="fa fa-download"></i>&nbsp;&nbsp;生成发货单</button>
+                        </div>
+                    </div>
+                    <div class="toolBox btn-group right">
+                        <button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div id="toolbar" class="btn-group">
+                        <input type="text" class="form-control" name="productId" placeholder="输入条形码">
+                        <input type="text" class="form-control" name="productTitle" placeholder="输入品名">
+                        <input type="text" class="form-control" name="orderCode" placeholder="输入订单号">
+                        <select type="text" class="form-control" name="warehouse"></select>
+                        <button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+                    </div>
+                    <table id="table-products"></table>
+                </div>
+            </div>
+        </div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+	<script type="text/javascript" src="../dists/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../js/bootstrap-table-template.js"></script>
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+    <script type="text/javascript" src="../dists/select2/dist/js/select2.full.min.js"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+    <script type="text/html" id="unpack">
+        <p>共<%= length %>件商品</p>
+        <table class="table table-bordered orderTable">
+            <thead>
+                <tr>
+                    <% for(var i = 0;i < tit.length;i++){ %>
+                        <th><%= tit[i] %></th>
+                    <% } %>
+                </tr>
+            </thead>
+            <tbody>
+                <% for(var i = 0;i < data.length;i++){ %>
+                    <tr>
+                        <td data-orderProductId="<%= data[i].orderProductId %>"><%= data[i].barCode %></td>
+                        <td><img width="100%" class="" src="<%= data[i].proPic %>"></td>
+                        <td><%= data[i].proName %></td>
+                        <td><%= data[i].proSize %></td>
+                        <td><input type="number" value="<%= data[i].orderProNum||0 %>" min="0" max="<%= data[i].orderProNum||0 %>"></td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+        <div class="formBox">
+            <div class="form-group">
+                <label for="exampleInputEmail1">物流公司</label>
+                <select type="text" class="form-control" name="expressCompany"></select>
+            </div>
+            <div class="form-group">
+                <label for="exampleInputEmail1">物流单号</label>
+                <input type="text" class="form-control" id="expressNum" placeholder="请输入物流单号">
+            </div>
+            <div class="form-group">
+                <label for="exampleInputEmail1">运费</label>
+                <input type="number" class="form-control" id="expressPay" placeholder="请输入运费金额">
+            </div>
+        </div>
+        <button type="button" class="btn btn-success" onclick="app.methods.package()">确定</button>
+    </script>
+	<script type="text/javascript">
+		var app = {
+			data : {
+				table : $("#table-products"),
+                expressCompany:['顺丰快递', 'ems', '百世快递', '宅急送', '中通快递', '申通快递', '圆通快递', '韵达快递', '天天快递', '德邦快递'],
+                openId:''
+			},
+			methods : {
+                showSearchView: function () {
+                    $('#toolbar .form-inline').toggle()
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-down')
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-up')
+                    app.methods.initBootstrapTableStyle();
+                },
+                initBootstrapTableStyle: function(){
+                    $('.panel .panel-body .bootstrap-table').css({
+                        'height':'calc(100% - '+$('#toolbar').outerHeight(true)+'px)'
+                    })
+                    $('.panel .panel-body .bootstrap-table .fixed-table-container').css({
+                        'height':'calc(100% - '+$('.panel .panel-body .bootstrap-table .fixed-table-container .fixed-table-pagination').outerHeight(true)+'px)'
+                    })
+                },
+				resetDilivery : function(orderCode , target){
+					$.ajax({
+						type: "get",
+						url: utils.prePath() + "/api/admin/delivery/reset/" + orderCode,
+						async: false,
+						success: function (result) {
+							if (result.statusCode == 'OK') {
+								$(target).hide();							
+							} else {
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+				},
+				initTable : function(){
+					app.data.table.bootstrapTable({
+						pagination : true , 
+						cache: false,
+						sortable: false,
+						sidePagination: "server",
+						clickToSelect : true,
+						templateView : false,
+						showHeader : true,
+						pageNumber : 1 , 
+						pageSize : 15 , 
+						pageList : [15 , 30 , 45 , 90],
+						toolbarAlign : 'left',
+						queryParamsType : 'page' ,
+						queryParams : function(params){
+                            params.sort = 'orderId';
+                            var orderCode = $('#toolbar input[name=orderCode]').val().trim();
+                            if(orderCode){
+                                params.orderCode = orderCode;
+                            }
+							params.productSkuBarcode = $('#toolbar input[name=productId]').val().trim();
+							params.productTitle = $('#toolbar input[name=productTitle]').val().trim();
+                            var warehouseId = $('#toolbar select[name=warehouse]').select2('val');
+							if(warehouseId){
+								params.warehouseId = warehouseId[0];
+							}
+							params.size = params.pageSize;
+							params.page = parseInt(params.pageNumber)-1;
+							return params;
+						},
+                        url: utils.prePath() + '/api/admin/delivery/pending/list',
+						totalField: 'body.totalElements',
+        				dataField: 'body.content',
+					    columns: app.methods.optionByAuthority(),
+					    onLoadSuccess : function(data){
+							tableUi.initBootstrapTable();
+                            var data = data.body.content;
+                            if(data.length == 0){
+                                return false
+                            }
+					    	//处理图片显示
+							$('#table-products .thumbnail img').height($('#table-products .thumbnail img').width());
+                            $('[data-toggle="tooltip"]').tooltip();
+
+                            // 处理合并显示
+                            // 对比不同的订单号
+                            function findDiff(e){
+                                var state = true;
+                                for (var i = 0; i < Data.length; i++) {
+                                    if (e.orderCode !== Data[i].data.orderCode) {
+                                        state = true;
+                                    }else{
+                                        state = false;                                        
+                                        return state;
+                                    }
+                                }
+                                return state;
+                            }
+
+                            var Data = [];
+                            var type = 0;
+                            data.map(function (e, j) {
+                                var isRe = findDiff(e);
+                                if(j != 0 && isRe) {
+                                    type += 1;
+                                }
+                                Data.push({
+                                    data: e,
+                                    index: j,
+                                    type: type
+                                })
+                            })
+
+                            var _data = [[]];
+                            var _type = 0;
+
+                            // 根据不同的订单号分组（type），生成新数组
+                            for (var i = 0; i < Data.length; i++) {
+                                if (Data[i].type == _type) {
+                                    _data[_type].push(Data[i])
+                                } else {
+                                    _type += 1;
+                                    _data.push([Data[i]])
+                                }
+                            }
+
+                            var optData = [];
+                            for (var i = 0; i < _data.length; i++) {
+                                // 合并数据
+                                var add = 0;
+                                _data[i].map(function(e){
+                                    add += (e.data.productSkuQuantity - 0)
+                                })
+                                $('#table-products tbody tr[data-index="'+_data[i][0].index+'"]').find('td').eq(12).text(add)
+                                // 给对应的订单级选择增加事件
+                                $('#table-products tbody tr[data-index="'+_data[i][0].index+'"]').find('td').eq(0).find('input').on('click',function(){
+                                    var td = $(this).parent().parent()
+                                    var startNum = td.parent().attr('data-index');
+                                    var length = td.attr('rowspan')
+                                    // 选择对应的商品
+                                    for (var j = 0; j < length; j++) {
+                                        var $this = $('#table-products tbody tr').eq((startNum - 0) + (j - 0)).find('.selectOne').find('input')
+                                        if($(this).is(':checked')){
+                                            if(!$this.is(':checked')){
+                                                $this.click();
+                                            }
+                                        }else{
+                                            if($this.is(':checked')){
+                                                $this.click();
+                                            }
+                                        }
+                                    }
+                                })
+                                
+                                // 合并表格
+                                var mergeData = ["checked","orderCode","message","publicNum","name","tel","address","createdAt","remark" , "options"]
+                                mergeData.map(function(e){
+                                    $('#table-products').bootstrapTable('mergeCells', {
+                                        index: _data[i][0].index,
+                                        field: e,
+                                        rowspan: _data[i].length
+                                    });
+                                })
+                            }
+					    },
+						onLoadError: function(result){
+							if(result == 403){
+								toastr.error("不允许访问")
+							}else{
+								toastr.error('系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+                },
+                searchTable: function () {
+					app.data.table.bootstrapTable('refresh');
+				},
+                unpack: function(){
+                    // 合并数据
+                    var selectData = [];
+                    var hadSelect = 0;
+                    $('#table-products .selectOne').each(function(){
+                        if($(this).find('input').is(':checked')){
+                            hadSelect += 1;
+                            selectData.push(JSON.parse($(this).attr('data-orderNum')))                            
+                        }
+                    })
+                    if(hadSelect == 0){
+                        toastr.error('请选择打包商品后再合箱打包...');
+                        return false;
+                    }
+                    
+                    var unpackData = {
+                        'data':selectData,
+                        'length':selectData.length,
+                        'tit':['条形码','商品图','品名','规格','数量']
+                    }
+                
+                    var index = layer.open({
+                        type: 1,
+                        content: template('unpack', unpackData),
+                        area: ['700px', 'auto'],
+                        title: '确认合箱商品数量',
+                        skin:'tabBox'
+                    });
+                    app.data.openId = index;
+
+                    // 初始化物流公司选项
+                    $('select[name="expressCompany"]').select2({
+                        data: app.data.expressCompany,
+                        placeholder: "请选择物流公司",
+                        multiple : true,
+                        maximumSelectionLength : 1,
+						tags: true,
+                    });
+                },
+                package:function(){
+                    var barCodeData = [];
+                    $('.orderTable tbody tr').each(function(){
+                        barCodeData.push({
+                            orderProductId:$(this).find('td').eq(0).data('orderproductid'),
+                            productDeliveryQuantity:$(this).find('td').eq(4).find('input').val()
+                        })
+                    })
+
+                    var data = {
+                        deliveryProducts:barCodeData,
+                        expressCompany:$('select[name="expressCompany"]').select2('val'),
+                        waybillCode:$('#expressNum').val(),
+                        deliveryFreightPrice:$('#expressPay').val()
+                    }
+                    
+                    if(data.expressCompany){
+                        data.expressCompany = data.expressCompany[0];
+                    }
+
+                    if(data.expressCompany || data.waybillCode || data.deliveryFreightPrice){
+                        if(!data.expressCompany || !data.waybillCode || !data.deliveryFreightPrice){
+                            toastr.error('请完整填写快递信息...');                            
+                            return false;
+                        }
+                    }
+                    
+                    $.ajax({
+						type: "POST",
+						url: utils.prePath() + "/api/admin/delivery",
+						data: JSON.stringify(data),
+						success: function (result) {
+							if (result.statusCode == 'OK') {
+								toastr.success((result.body && result.body.message) ? result.body.message : '合箱打包成功...');
+								layer.close(app.data.openId)
+								app.data.table.bootstrapTable('refresh');								
+							} else {
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+                },
+                optionByAuthority: function () {
+                    // 管理员
+                    var option = [{
+                        field : 'checked',
+                        title: '<label class="fancy-checkbox"><input type="checkbox"><span></span></label>',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<label class="fancy-checkbox"><input type="checkbox"><span></span></label>'
+                        }
+                    },{
+                        field: 'orderCode',
+                        title: '订单号',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            if(row.inventory < row.productSkuQuantity && !row.id){
+                                return '';
+                            }
+                            var opt = {
+                                barCode: row.productSkuBarcode,
+                                proPic: row.productImageUrl,
+                                proName: row.productTitle,
+                                proSize: row.productSkuName,
+                                orderProNum: row.productSkuQuantity - row.productDeliveryQuantity,
+                                orderProductId: row.orderProductId
+                            }
+                            var optStr = "'"+JSON.stringify(opt)+"'"
+                            return '<label class="fancy-checkbox selectOne" data-orderNum=' + optStr + '><input type="checkbox"><span></span></label>'
+                        }
+                    }, {
+                        field: 'productImageUrl',
+                        title: '商品图',
+                        align: 'center',
+                        width : 60,
+						minWidth : 60,
+                        formatter: function (value, row, index, field) {
+							return '<a href="#" onclick = "app.methods.preview('+row.productId+');"><img src="'+value+'" alt="'+row.productTitle+'" class="img-responsive proImage"></a>';
+                        }
+                    }, {
+                        field: 'productTitle',
+                        title: '品名',
+                        minWidth: 200,
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'productSkuName',
+                        title: '规格',
+                        minWidth: 100,
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'productDeliveryQuantity',
+                        title: '已发数量',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + value + '</span>';
+                        }
+                    }, {
+                        field: 'productSkuQuantity',
+                        title: '待发数量',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'inventory',
+                        title: '库存',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + value + '</span>';
+                        }
+                    }, {
+                        field: 'productSkuBarcode',
+                        title: '条形码',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'lastWarehouseInventoryAt',
+                        title: '最后库存变更时间',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                        	if(value){
+                        		var time = moment(value.split(' ')[0] + ' ' + value.split(' ')[1]).format('YYYY-MM-DD HH:mm:ss');
+                            	return '<span class="text-length-table-col">' + time + '</span>';
+                        	}
+                        	return '-';
+                        }
+                    }, {
+                        field: 'message',
+                        title: '留言',
+                        width: 80,
+                        minWidth: 80,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var maxLength = 12;
+                            var note = "'" + value + "'";
+                            if (value.split('').length > maxLength) {
+                                return '<span class="text-length-table-col">' + value.slice(0, maxLength + 1) + 
+                                     '</span><a class="simpleBtn" href="#" onclick="app.methods.showNote(' + note + ')">查看全部</a>';
+                            } else {
+                                return '<span class="text-length-table-col">' + value + '</span>';
+                            }
+                        }
+                    }, {
+                        field: 'publicNum',
+                        title: '订单总件数',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'name',
+                        title: '姓名',
+                        align: 'center',
+                        minWidth: 80,
+                        width: 80,
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + row.orderAddress.consignee + '</span>';
+                        }
+                    }, {
+                        field: 'tel',
+                        title: '电话',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + row.orderAddress.tel + '</span>';
+                        }
+                    },{
+                        field: 'address',
+                        title: '地址',
+                        width: 120,
+                        minWidth: 120,
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + row.orderAddress.city + row.orderAddress.district + row.orderAddress.detail + '</span>';
+                        }
+                    },{
+                        field: 'createdAt',
+                        title: '订单时间',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            var time = moment(value.split(' ')[0] + ' ' + value.split(' ')[1]).format('YYYY-MM-DD HH:mm:ss');
+                            return '<span class="text-length-table-col">' + time + '</span>';
+                        }
+                    }, {
+                        field: 'remark',
+                        title: '备注',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                    	field : 'options',
+                        title: '操作' , 
+				        align : 'center',
+				        width : 200,
+				        minWidth : 160,
+				        formatter :  function(value, row, index, field) {
+				        	return   '<a class="btn btn-info btn-xs" onclick="app.methods.resetDilivery(\''+row.orderCode+'\' , this)">修复</a>';
+						}
+                    }];
+                    return option;
+                },
+                preview : function(id){
+					layer.open({
+					  	type: 2,
+					  	title: '产品预览',
+					  	maxmin : true,
+					  	shadeClose: true,
+					  	resize : false,	
+					  	shade: 0.8,
+                        area: ['392px', '710px'],
+                        skin:'preview',  
+					  	content: utils.perviewPath(id)
+					});
+				},
+                showNote: function(detail){
+                    layer.alert(detail);
+                },
+                initSelect2 : function(){
+                    // 接收仓库选择器
+					$.ajax({
+						type: "get",
+						url: utils.prePath() + "/api/admin/warehouse/list",
+						async: false,
+						success: function (result) {
+							if (result.statusCode == 'OK') {
+								var data = [];
+								result.body.map(function(e){
+									data.push({
+										id: e.id,
+										text: e.warehouseName,
+										username: e.username
+									})
+								})
+								$('select[name="warehouse"]').select2({
+									data: data,
+									placeholder: "选择接收仓库",
+									allowClear: true
+								});
+                                $('select[name="warehouse"]').val('').trigger('change')								                                
+								app.data.warehouseData = data;								
+							} else {
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+                },
+				initToolbar: function(){
+					// TODO
+					// 临时处理权限
+					var role = utils.cookie.getCookie('roles');
+					if(!role || role == ''){
+						top.location.href = '../login.html';
+					}
+					role = role[0];
+					if(role == '库管'){
+						var user_warehouse_id;
+						app.data.warehouseData.map(function(e){
+							if(e.username == utils.cookie.getCookie('username')){
+								user_warehouse_id = e.id;
+							}
+						})
+						$('select[name="warehouse"]').val(user_warehouse_id).trigger('change')
+						$('select[name="warehouse"]').next().hide()
+					}
+					$('#toolbar').show();
+				},
+                enterKey : function(){
+					$('#toolbar').keyup(function(event){
+					  	if(event.keyCode ==13){
+					    	app.methods.searchTable();
+					  	}
+					});
+				},
+            },
+            event:{
+                selectAll:function(e,domList){
+                    domList && domList.each(function(){
+                        if(e.is(':checked')){
+                            if(!$(this).is(':checked')){
+                                $(this).click();
+                            }
+                        }else{
+                            if($(this).is(':checked')){
+                                $(this).click();
+                            }
+                        }
+                    })
+                },
+                init:function () {
+                    $('#table-products thead input[type="checkbox"]').on('click',function(){
+                        app.event.selectAll($(this),$('#table-products tbody input[type="checkbox"]'))
+                    })
+                }
+            },
+			init : function(){
+				app.methods.initSelect2();
+				app.methods.initToolbar();
+				app.methods.initTable();
+				app.methods.enterKey();
+				app.event.init();
+			}
+		}
+		
+		$(function(){
+			app.init();
+		});
+	</script>
+</html>

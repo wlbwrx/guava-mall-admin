@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>退货退款</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/bootstrap-select/css/bootstrap-select.min.css" />
+        <link rel="stylesheet" href="../dists/daterangepicker/daterangepicker.css" />
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<!-- <link rel="stylesheet" href="../dists/hint/hint.css"/> -->
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="../dists/bootstrap-table/dist/bootstrap-editable.css" rel="stylesheet"/>
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+			ul.addressBox{cursor: default;text-decoration: none;}            
+			.trackerInfo h3{margin: 12px 0 0 0;font-size: 16px;}
+			.trackerInfo table{margin-top: 12px;}
+			.trackerInfo table th{font-size: 14px!important;}
+			.commentsList{list-style: none;padding: 0;margin: 0;}
+			.commentsList li{border-bottom: 1px solid #ddd;padding: 6px;}
+			.commentsList li:last-child{border-bottom: 0;}
+			.commentsList li span{display: block;;white-space:nowrap;float: left;}
+			.skuinfoList{
+				display:flex;
+				display:-webkit-flex;
+			}
+			.skuinfoList span{
+				display:block;flex:1;
+			}
+			tr th .skuinfoList,tr td .skuinfoList{
+				border-bottom:1px solid #eee;
+			}
+			tr th .skuinfoList:last-child,tr td .skuinfoList:last-child{
+				border-bottom:0;
+			}
+			.skuinfoList span i{
+				font-style:normal;
+				padding:5px 7px;
+				font-size:13px;
+				background:#41B314;
+				color:#fff;
+			}
+			#toolbar .dropdown,#toolbar input{
+				margin-top:5px;
+			}
+			.btn-group .dropdown,.btn-group .dropdown button{
+				float:left;
+			}
+			#analysisMes{
+				margin-left:20px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="panel panel-headline">
+				<div class="panel-heading">
+					<div class="left">
+						<h3 class="panel-title">退货退款</h3>
+						<div class="toolBox btn-group">
+							<!-- <button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i>&nbsp; 搜索 </button> -->
+                            <div class="btn-group">
+								<button type="button" class="btn btn-success btn-sm" id="upload"><i class="fa fa-upload"></i> 导入退货退款</button>
+								<button type="button" class="btn btn-success btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									<span class="caret"></span>
+									<span class="sr-only">Toggle Dropdown</span>
+								</button>
+								<ul class="dropdown-menu">
+									<li><a href="../excel2/退款对账模板.xlsx">退款对账模板</a></li>
+								</ul>
+								<button class="btn btn-warning btn-sm export" onclick="tools.exportByFrom('/api/admin/erp/refund/verify/export');"><i class="fa fa-download"></i>&nbsp;&nbsp;导出</button>
+								<button class="btn btn-primary btn-sm export" onclick="app.methods.batchCancel()"><i class="fa fa-refresh"></i>&nbsp;&nbsp;批量同步</button>
+							</div>
+							<span id="analysisMes"></span>
+						</div>	
+					</div>	
+					<div class="toolBox btn-group right">
+						<button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+					</div>
+				</div>
+				<div class="panel-body">
+					<div id="toolbar" class="btn-group">
+						<input type="text" inputTpye="daterange" rangeStart="trackerBeginDate" rangeEnd="trackerEndDate" class="form-control" name="deliveryTimes" placeholder="发货时间"/>
+						<input type="text" inputTpye="daterange" rangeStart="verifyBeginDate" rangeEnd="verifyEndDate" class="form-control" name="trackerTimes" placeholder="操作时间" />
+						<!-- <select class="selectpicker" data-live-search="true" name="storehouseId"></select> -->
+						<input type="text" class="form-control" name="deliveryCode" placeholder="发货单号">
+						<input type="text" class="form-control" name="trackingNumber" placeholder="物流单号"> 
+                        <select name="verifyStatus" data-title="退款状态" class="selectpicker">
+							<option value="">全部退款状态</option>
+							<option value="1">一致</option>
+							<option value="2">不一致</option>
+						</select>
+						<select name="paymentType" data-title="全部付款方式" class="selectpicker">
+							<option value="">全部</option>
+							<option value="1">货到付款</option>
+							<option value="3">信用卡</option>
+						</select>
+						<select name="refundStatusLogistics" data-title="货代反馈退款状态" class="selectpicker">
+							<option value="">全部</option>
+							<option value="成功">成功</option>
+							<option value="失败">失败</option>
+						</select>
+						<select name="refundType" data-title="退款方式" class="selectpicker">
+							<option value="">全部</option>
+							<option value="线上">线上</option>
+							<option value="店退">店退</option>
+						</select>
+						<button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');" style='margin-top:5px;'><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+					</div>
+					<table id="table-main" style='overflow:auto;'></table>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+    <script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-select/js/bootstrap-select.min.js" ></script>   
+	<script src="../dists/bootstrap-table/dist/bootstrap-editable.min.js"></script> 
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+    <script type="text/javascript" src="../dists/daterangepicker/daterangepicker.min.js"></script>
+    <script type="text/javascript" src="../dists/plupload-2.3.6/js/plupload.full.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/i18n/zh_CN.js"></script>
+	<script type="text/javascript" src="../js/plupload-upload.js"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+	<script type="text/javascript" src="../js/jquery.table2excel.js"></script>
+	<script type="text/html" id="trackerInfo">
+        <div class="trackerInfo">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>配送状态</th>
+                        <th>状态描述</th>
+                        <th>详情</th>
+                        <th>更新时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for(var i = 0;i < trackinfo.length;i++){ %>
+                        <tr>
+                            <td style="text-align:center;"><%= i + 1 %></td>
+							<td>
+								<% if(trackinfo[i].checkpoint_status == 'pending'){ %>
+									查询中
+								<% } %>
+								<% if(trackinfo[i].checkpoint_status == 'notfound'){ %>
+									查询不到
+								<% } %>
+								<% if(trackinfo[i].checkpoint_status == 'transit'){ %>
+									运输途中
+								<% } %>
+								<% if(trackinfo[i].checkpoint_status == 'pickup'){ %>
+									到达待取
+								<% } %>
+								<% if(trackinfo[i].checkpoint_status == 'delivered'){ %>
+									成功签收
+								<% } %>
+								<% if(trackinfo[i].checkpoint_status == 'undelivered'){ %>
+									投递失败
+								<% } %>
+								<% if(trackinfo[i].checkpoint_status == 'exception'){ %>
+									可能异常
+								<% } %>
+								<% if(trackinfo[i].checkpoint_status == 'other'){ %>
+									其他状态
+								<% } %>
+								<% if(trackinfo[i].checkpoint_status == 'expired'){ %>
+									运输过久
+								<% } %>
+								<% if(trackinfo[i].checkpoint_status == 'null'){ %>
+									查询超时
+								<% } %>
+							</td>
+                            <td><%= trackinfo[i].StatusDescription %></td>
+                            <td><%= trackinfo[i].Details %></td>
+                            <td><%= trackinfo[i].Date %></td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+        
+        <h4></h4>
+        <p></p>
+    </script>
+	<script type="text/javascript">
+	
+		var app = {
+			data : {
+                table : $("#table-main"),
+                financeData: [],
+                storageType: cacheSessionStorage.getCache('storageType'),
+                initUploadState: false
+			},
+			methods : {
+				initTable : function(){
+					var authority_data = authoritys.useAuthority();
+					// if(!authority_data){
+					// 	toastr.error("权限不足，不允许访问...")
+					// 	return;
+					// } 
+					// console.log(tableUi.data.tableOption_page)
+					// $('#test_edit').editable({ 
+					// 	type: "text",    //编辑框的类型。支持text|textarea|select|date|checklist等 
+					// 	title: "用户名",    //编辑框的标题 
+					// 	disabled: false,    //是否禁用编辑 
+					// 	emptytext: "空文本",   //空值的默认文本 
+					// 	mode: "inline",    //编辑框的模式：支持popup和inline两种模式，默认是popup 
+					// 	validate: function (value) { //字段验证 
+					// 		if (!$.trim(value)) { 
+					// 			return '不能为空'; 
+					// 		} 
+					// 	} 
+					// }); 
+					tableUi.data.tableOption_page.dataField = 'body.list' // 重新赋值返回的数据参数
+					tableUi.data.tableOption_page.totalField = 'body.total' //重新赋值总共多少条数据
+					app.data.table.bootstrapTable(Object.assign(tableUi.data.tableOption_page, {
+                        url: utils.prePath() + '/api/admin/erp/refund/verify/list',  // 查询回款列表
+						queryParams : function(params){
+							// params.pageSize = params.pageSize;
+							params.page = parseInt(params.pageNumber)-1;
+							delete params['pageNumber'];
+							return Object.assign(params, tools.getParams());
+						},
+						columns: app.methods.optionByAuthority(),
+						onClickCell: function(field, value, row, $element){
+							let curRow = {};
+							curRow = row; 
+							
+							// if(field == 'remark'){
+							// 	$('#editableNo_'+ row.order_id).editable({ 
+							// 		type: "text",    //编辑框的类型。支持text|textarea|select|date|checklist等 
+							// 		title: "用户名",    //编辑框的标题 
+							// 		disabled: false,    //是否禁用编辑 
+							// 		emptytext: "空文本",   //空值的默认文本 
+							// 		mode: "inline",    //编辑框的模式：支持popup和inline两种模式，默认是popup 
+							// 		validate: function (value) { //字段验证 
+							// 			if (!$.trim(value)) { 
+							// 				return '不能为空'; 
+							// 			} 
+							// 		}
+							// 	});
+							// }
+							// $('#editableNo_'+ row.order_id).editable({ 
+							// 	type: "text",    //编辑框的类型。支持text|textarea|select|date|checklist等 
+							// 	title: "用户名",    //编辑框的标题 
+							// 	disabled: false,    //是否禁用编辑 
+							// 	emptytext: "空文本",   //空值的默认文本 
+							// 	mode: "inline",    //编辑框的模式：支持popup和inline两种模式，默认是popup 
+							// 	validate: function (value) { //字段验证 
+							// 		if (!$.trim(value)) { 
+							// 			return '不能为空'; 
+							// 		} 
+							// 	} 
+							// });
+						},
+						onLoadSuccess : function(data){
+							tableUi.initBootstrapTable();
+							authoritys.useAuthority();
+							app.data.financeData = data.body.list
+							// 全选功能
+							app.events.initCheckbox();
+							app.data.initUploadState == false && app.methods.initPushFile();
+							// 赋值
+							$('#analysisMes').html('售后/货代退货退款金额合计：'+ (data.body.extra.totalRefundPrice ? data.body.extra.totalRefundPrice : 0) +'/'+ (data.body.extra.totalRefundPriceLogistics ? data.body.extra.totalRefundPriceLogistics : 0) +'台币 ，退款/货代反馈手续费额合计： '+ (data.body.extra.totalServicePrice ? data.body.extra.totalServicePrice : 0) + '/' + (data.body.extra.totalServicePriceLogistics ? data.body.extra.totalServicePriceLogistics : 0) + '台币')
+							$('.editableNo_a').editable({ 
+								type: "text",    //编辑框的类型。支持text|textarea|select|date|checklist等 
+								title: "备注",    //编辑框的标题 
+								disabled: false,    //是否禁用编辑 
+								emptytext: "--",   //空值的默认文本 
+								mode: "inline",    //编辑框的模式：支持popup和inline两种模式，默认是popup 
+								// validate: function (value) { //字段验证 
+								// 	if (!$.trim(value)) { 
+								// 		return '不能为空'; 
+								// 	} 
+								// },
+								success: function(data, config){
+									let tracking = $(this).attr('tracker_id')
+									$.ajax({
+										type: "PUT",
+										url: utils.prePath() + '/api/admin/erp/refund/verify/'+ tracking +'/remark',
+										dataType:'json',
+										headers:{
+											'Content-Type': 'application/x-www-form-urlencoded'
+										},
+										data:{
+											'remark': !$.trim(config) ?　'--' : config
+										},
+										success: function (result) {
+											console.log(result)
+											if(result.statusCode == 'OK'){
+												toastr.success('备注成功');
+											}else{
+												toastr.error('修改失败');
+											}
+										},
+										error: function (result){
+											toastr.error('修改失败');
+											app.data.table.bootstrapTable('refresh');
+										}
+									})
+								}
+							}); 
+					    },  
+					}));
+				},
+                optionByAuthority: function () {
+                    var option = [ {
+						title: '<label class="fancy-checkbox"><input type="checkbox" class="checkAll"><span></span></label>',align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<label class="fancy-checkbox"><input type="checkbox" class="checkOrder" data-id="' + row.deliveryCode +'" data-index="' + index + '"><span></span></label>';
+						}
+					}, {
+						field: 'trackerCreatedAt',title: '发货时间',align: 'center',minWidth: 200,
+						formatter: function (value, row, index, field){
+							return tools.formatterFunction.time(value)
+						}
+					}, {
+                        field: 'refundDate',title: '<span style="color:red !important;">货代实际退款日期</span>',align: 'center',
+						formatter: function (value, row, index, field){
+							return tools.formatterFunction.time(value)
+						}
+					}, {
+                        field: 'deliveryCode',title: '<span style="color:red !important;">发货单号</span>',align: 'center',minWidth: 150
+					}, {
+						field: 'trackingNumber',title: '<span style="color:red !important;">物流单号</span>',align: 'center',minWidth:120,
+
+					}, {
+						field: 'paymentType',title: '付款方式',align: 'center',
+						formatter: function (value, row, index, field){
+							if(value){
+								if(value == 1){
+									return '货到付款'
+								}else if(value == 3){
+									return '信用卡'
+								}else{
+									return  '未知'
+								}
+							}
+						}
+					}, {
+						field: 'saleServiceRefundPrice',title: '售后退款金额(NT$)',align: 'center',
+						formatter: function (value, row, index, field){
+							return value <= 0 ? `<span style="cursor:pointer;" onclick="app.methods.changeNumber('${row.deliveryCode}')">${value}</span>` : value
+						}
+					}, {
+						field: 'freightRefundPrice',title: '退运费金额(NT$)',align: 'center',
+						formatter: function (value, row, index, field){
+							return value
+						}
+					}, {
+						field: 'totalRefundPrice',title: '售后退款金额合计(NT$)',align: 'center',
+						formatter: function (value, row, index, field){
+							return value
+						}
+					}, {
+						field: 'totalRefundPriceLogistics',title: '<span style="color:red !important;">货代退货退款金额(NT$)</span>',align: 'center',
+						formatter: function (value, row, index, field){
+							return value
+						}
+					}, {
+						field: 'verifyStatus',title: '退款状态',align: 'center',
+						formatter: function (value, row, index, field){
+							if(value){
+								return value == 1 ? '一致' : '不一致'
+							}
+							return value
+						}
+					}, {
+						field: 'differRefundPrice',title: '退款金额差异(NT$)',align: 'center',
+						formatter: function (value, row, index, field){
+							return value
+						}
+					}, {
+						field: 'refundStatusLogistics',title: '<span style="color:red !important;">货代反馈退款状态</span>',align: 'center',
+						formatter: function (value, row, index, field){
+							return value
+						}
+					}, {
+						field: 'deliveryStatus',title: '物流状态',align: 'center',
+						formatter: function (value, row, index, field){
+							return value
+						}
+					}, {
+						field: 'trackerStatusLogistics',title: '<span style="color:red !important;">货代反馈物流状态</span>',align: 'center',
+						formatter: function (value, row, index, field){
+							return value
+						}
+					}, {
+						field: 'servicePrice',title: '手续费（NT$）',align: 'center',
+						formatter: function (value, row, index, field){
+							return value
+						}
+					}, {
+						field: 'servicePriceLogistics',title: '<span style="color:red !important;">货代反馈手续费（NT$）</span>',align: 'center',
+						formatter: function (value, row, index, field){
+							return value
+						}
+					},
+					{
+						field: 'remark',title: '备注（点击编辑）',align: 'center',width:300,
+						formatter:function(value,row,index){
+							return  '<span class="editableNo_a" tracker_id="'+ row.verifyId +'">' +  (value != null ? value : '--') + '</span>'     
+						}
+					},
+					{
+						field: 'updatedAt',title: '操作时间',align: 'center',minWidth:120,
+						formatter: function (value, row, index, field){
+							return tools.formatterFunction.time(value)
+						}
+
+					}];
+                    return option;
+				},
+				showTracking: function(index){
+					if(app.data.financeData[index].origin_info && app.data.financeData[index].origin_info != {}){
+						layer.open({
+							type: 1,
+							content: template('trackerInfo',  JSON.parse(app.data.financeData[index].origin_info)),
+							area: ['800px', 'auto'],
+							title: '查看货运详情',
+							skin: 'trackerInfoBox',
+							closeBtn: 1
+						});
+					}else{
+						toastr.error('查询不到货运详情...');
+					}
+				},
+				remark: function(index){
+					layer.prompt({
+                        title: '备注',
+                        value: app.data.financeData[index].remark,
+                        formType: 0
+                    }, function (text, i) {
+						$.ajax({
+							type: "PUT",
+							url: utils.prePath() + "/api/admin/erp/delivery/tracker/remark",
+							data: JSON.stringify({
+								trackingNumber : app.data.financeData[index].tracking_number,
+								remark : text
+							}),
+							success: function (result) {
+								if (result.statusCode == 'OK') {
+									toastr.success('操作成功...');
+									app.data.table.bootstrapTable('refresh');
+									layer.closeAll();
+								} else {
+									toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+								}
+							}
+						});
+                    });
+                },
+                pass: function(trackerInfoId,state){
+					$.ajax({
+						type: "PUT",
+						url: utils.prePath() + "/api/admin/erp/finance/invoice/" + state + '/' + trackerInfoId,
+						success: function (result) {
+							if (result.statusCode == 'OK') {
+								toastr.success('操作成功...');
+								app.data.table.bootstrapTable('refresh');
+							} else {
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+				},
+				changeNumber: function(typeId){
+					layer.closeAll();
+					layer.prompt({
+						title: "修改<span style='color:red;'>(只能修改一次)</span>"
+					}, function (text, _index) {
+						if(!text){
+							toastr.warning('请输入金额！')
+							return;
+						}
+						if(!/^\d+$|^\d+[.]?\d+$/.test(text)){
+							toastr.warning('请输入正确的金额！')
+							return;
+						}
+						$.ajax({
+							type: "POST",
+							url: utils.prePath() + '/api/admin/erp/refund/verify/'+ typeId +'/saleServiceRefundPrice',
+							dataType:'json',
+							headers:{
+								'Content-Type': 'application/x-www-form-urlencoded'
+							},
+							data:{
+								'deliveryCode': typeId,
+								'refundPrice': text
+							},
+							success: function (result) {
+								if(result.statusCode == 'OK'){
+									toastr.success('修改成功');
+									app.data.table.bootstrapTable('refresh');
+								}else{
+									toastr.error('修改失败');
+								}
+							},
+							error: function (result){
+								toastr.error('修改失败');
+							}
+						})
+						layer.close(_index);
+					});
+				},
+                initPushFile: function(){
+					// 导入回款信息
+					var uploader = new plupload.Uploader({
+						runtimes: 'html5,html4',
+						browse_button: 'upload',
+						url: utils.prePath() + "/api/admin/erp/refund/verify/import",
+						file_data_name: 'file',
+						filters: {
+							max_file_size: '10240kb',
+							mime_types: [{ title: "Excel files", extensions: "xls,xlsx" }],
+						},
+						multipart_params: {
+							access_token: utils.cookie.getCookie('accessToken'),
+						},
+						init: {
+							FilesAdded: function (up, files) {
+								layer.load();
+								up.start();
+								toastr.info('正在上传...');
+							},
+							FileUploaded: function(uploader,file,responseObject){
+                                var mes = JSON.parse(responseObject.response);
+								layer.closeAll('loading');
+								if(mes.statusCodeValue == 200){
+									if(mes.body.length > 0){
+										let html = '<table id="errorTable" class="table"><tr><td>发货单号</td><td>物流单号</td><td>货代实际退款日期</td><td>货代退款金额（NT$）</td><td>货代退款状态</td><td>货代物流状态</td><td>失败原因</td></tr>'
+										let newMes = mes.body
+										newMes.map(function(e){
+											html += '<tr><td>'+e.deliveryCode+'</td><td>'+ e.trackingNumber +'</td><td>'+ moment(e.refundDate).format('YYYY-MM-DD HH:mm:ss')  +'</td><td>'+ e.totalRefundPriceLogistics +'</td><td>'+ e.refundStatusLogistics +'</td><td>'+ e.trackerStatusLogistics +'</td><td>'+ e.message +'</td></tr>';
+										})
+										toastr.error('导入成功，' + mes.body.length + '条数据导入失败' );
+										layer.open({
+											type: 1,
+											content: html+'</table>',
+											title: '有' + mes.body.length + '条数据导入失败',
+											area: ['85vw', '80vh'],
+											closeBtn: 1,
+											btn: ['下载'],
+											yes: function(){
+												$("#errorTable").table2excel({
+													name: "退款对账异常数据",
+													filename: "退款对账异常数据" + new Date().toISOString().replace(/[\-\:\.]/g, ""),
+													fileext: ".xls"
+												});
+											}
+										});
+									}else{
+										toastr.success('导入成功');
+										app.data.table.bootstrapTable('refresh');
+									}
+									// window.location.reload();
+								}else{
+									toastr.success('导入失败');
+								}
+								// window.location.reload();
+							},
+							Error: function (up, err) {
+								toastr.error(JSON.parse(err.response).body.message);
+								layer.closeAll('loading');								
+							}
+						}
+					});
+					uploader.init();
+					app.data.initUploadState = true;
+				},
+				// 批量操作
+				batchCancel: function(){
+					let p_data = []
+					$('.checkOrder').each(function(i){
+						var i = $(this).data('index')
+						if($(this).is(":checked")){
+							p_data.push($(this).data('id'))
+						}
+					});
+
+					if(p_data == 0){
+						toastr.error('请选择需要同步的数据')
+						return false
+					} else {
+						layer.confirm('确定同步这'+ p_data.length +'条数据吗？', {icon: 1, title:'提示'}, function(_index){
+							$.ajax({
+								type: "POST",
+								url:  utils.prePath() + '/api/admin/erp/refund/verify/sync',
+								contentType: 'application/x-www-form-urlencoded',
+								data: {
+									deliveryCode:  p_data.join(',')
+								},
+								success: function (result) {
+									if (result.statusCode == 'OK') {
+										toastr.success('同步成功');
+										layer.closeAll();
+										window.location.reload();
+									} else {
+										layer.closeAll();
+										toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+									}
+								}
+							});
+						});
+					}
+				},
+				initSelect : function(){
+                    tools.rangeTime('input[name="deliveryTimes"]');
+					tools.rangeTime('input[name="trackerTimes"]',true);
+					// tools.renderSelect.trackerStatus('select[name="trackerStatus"]', true);
+					// tools.renderSelect.settlementStatus('select[name="settlementStatus"]');
+					// tools.renderSelect.deliveryProductStatus('select[name="productStatus"]');
+					// 全部貨代公司
+					tools.renderSelect.agencyCompany('select[name="agencyCompany"]')
+					// 全部仓库
+					tools.renderSelect.storehouseId('select[name="storehouseId"]')
+					// 全部快递类别
+					tools.renderSelect.carrierCode('select[name="carrierCode"]')
+					// 全部回款状态
+					tools.renderSelect.paybackStatus('select[name="paybackStatus"]')
+					// 全部金额状态
+					tools.renderSelect.paybackConsistent('select[name="paybackConsistent"]')
+				}
+			},
+			events:{
+				initCheckbox:function(){
+					$('.checkAll').on('click',function(){
+						console.log('选择')
+						if($(this).is(":checked")){
+							$('.checkOrder').each(function(){
+								if(!$(this).is(":checked")){
+									$(this).click()
+								}
+							})
+						}else{
+							$('.checkOrder').each(function(){
+								if($(this).is(":checked")){
+									$(this).click()
+								}
+							})
+						}
+					});
+				}
+			},
+			init : function(){
+				app.methods.initSelect();
+				app.methods.initTable();
+				tools.toolbarEnterEvent(function(){app.data.table.bootstrapTable('refresh')});
+			}
+		}
+		$(function(){
+			app.init();
+		});
+	</script>
+</html>

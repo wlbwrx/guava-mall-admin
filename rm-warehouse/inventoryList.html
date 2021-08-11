@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Home</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<link rel="stylesheet" href="../dists/hint/hint.css"/>
+		<link rel="stylesheet" href="../dists/select2/dist/css/select2.css" />
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+			.storageBox .layui-layer-content{padding: 20px;}
+			.storageBox .proPicBox{padding: 10px;border: 1px solid #ccc;}
+			.storageBox .proPicBox img{width: 42px;height: 42px;display: inline-block;}
+			.storageBox .proPicBox span{line-height: 20px;display: block;padding-left: 10px;}
+
+			.changeDetailBox .layui-layer-content{padding: 20px;}
+			.changeDetailBox #changeDetailList{margin: 10px 0;}
+			.changeDetailBox .btnBox .col-md-6:last-child{text-align: right;}
+			.changeDetailBox .btnBox span.label{margin-right: 6px;}
+			.changeDetailBox .btnBox input{margin-right: 6px;color:#fff;background-color: #5bc0de;border: 0;width: 80px;padding: .2em .6em .3em;font-size: 75%;font-weight: 700;line-height: 1;color: #fff;text-align: center;white-space: nowrap;vertical-align: baseline;border-radius: .25em;}
+			.changeDetailBox .btnBox input::-webkit-input-placeholder{color:#fff;}
+			.changeDetailBox .btnBox input::-moz-placeholder{color:#fff;}
+			.changeDetailBox .btnBox input:-moz-placeholder{color:#fff;}
+			.changeDetailBox .btnBox input:-ms-input-placeholder{color:#fff;}	
+
+			input[type="number"]::-webkit-outer-spin-button,
+			input[type="number"]::-webkit-inner-spin-button {-webkit-appearance: none !important;}		
+			.proImage{min-width: 50px;max-width: 50px;width: 50px;}
+
+			/* 移动化 */
+			@media screen and (min-width: 769px) {
+				.modal-dialog .modal-content{min-width: 700px;}
+			}
+			@media screen and (max-width: 768px) {
+				.changeDetailBox{max-height: 100vh;}
+			}
+			@media screen and (max-height: 375px) {
+				.storageBox{max-height: 300px;}
+			}	
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="panel panel-headline">
+				<div class="panel-heading">
+					<div class="left">
+						<h3 class="panel-title">入库表</h3>
+						<div class="toolBox btn-group">
+							<button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i> 搜索</button>
+						</div>
+					</div>
+					<div class="toolBox btn-group right">
+						<button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+					</div>
+				</div>
+				<div class="panel-body">
+					<div id="toolbar" class="btn-group">
+						<input type="text" class="form-control" name="skuCode" placeholder="输入条形码" >
+						<input type="text" class="form-control" name="orderNum" placeholder="输入1688订单号" >
+						<input type="text" class="form-control" name="waybillCode" placeholder="输入物流单号" >
+						<select type="text" class="form-control" name="warehouse" ></select>
+						<select type="text" class="form-control" name="status" >
+							<option value="-1">全部</option>
+							<option value="0" selected>未完成</option>
+							<option value="1">已完成</option>
+							<option value="2">关闭</option>
+						</select>
+						<button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+					</div>
+					<table id="table-products"></table>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+	<script type="text/javascript" src="../dists/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../js/bootstrap-table-template.js"></script>
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+	<script type="text/javascript" src="../dists/select2/dist/js/select2.full.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/plupload.full.min.js"></script>
+    <script type="text/javascript" src="../dists/plupload-2.3.6/js/i18n/zh_CN.js"></script>
+    <script type="text/javascript" src="../js/plupload-upload-icons.js"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+	<script type="text/html" id="storage">
+		<div class="form-group proPicBox">
+			<div class="row">
+				<div class="col-md-2 col-xs-2">
+					<img src="<%= proPic %>" />
+				</div>
+				<div class="col-md-10 col-xs-10">
+					<span><%= proName %></span>
+					<span><%= productSkuName %></span>
+				</div>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="exampleInputAmount">入库数量</label>
+			<div class="input-group">
+				<div class="input-group-addon" onclick="app.methods.changeNumFromExpress(-1)">
+					<i class="fa fa-minus"></i>
+				</div>
+				<input type="number" value="<%= num %>" min="0" class="form-control" id="numFromExpress" placeholder="入库数量">
+				<div class="input-group-addon" onclick="app.methods.changeNumFromExpress(1)">
+					<i class="fa fa-plus minus"></i>
+				</div>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="expressCompany">物流公司</label>
+			<select type="text" id="expressCompany" class="form-control" name="chooseExpress">
+				<% for(var i = 0;i < expressCompany; i++){ %>
+					<option value="<%= expressCompany[i] %>"><%= expressCompany[i] %></option>
+				<% } %>
+			</select>
+		</div>
+		<div class="form-group">
+			<label for="expressNum">物流单号</label>
+			<input type="text" id="expressNum" class="form-control" placeholder="物流单号">
+		</div>
+		<button type="button" class="btn btn-success" onclick="app.methods.inventorySave('<%= productSkuBarcode %>','<%= purchaseCode %>','<%= id %>')">确定</button>
+	</script>
+	<script type="text/html" id="storageDetail">
+		<div class="row">
+			<div class="col-md-12">
+				<h5><%= proName %></h5>
+			</div>
+		</div>
+		<table id="changeDetailList"></table>
+		<!-- <div class="row btnBox">
+			<div class="col-md-6">
+				<span class="label label-info">7天内</span>
+				<span class="label label-info">30天前</span>
+			</div>
+			<div class="col-md-6">
+				<input type="text" placeholder="开始日期" id="datetimepickerStart">
+				<input type="text"  placeholder="结束日期" id="datetimepickerEnd">
+			</div>
+		</div> -->
+	</script>
+	<script type="text/javascript">
+		var app = {
+			data: {
+				table: $("#table-products"),
+				expressCompany: ['顺丰快递', 'ems', '百世快递', '宅急送', '中通快递', '申通快递', '圆通快递', '韵达快递', '天天快递', '德邦快递'],
+				authority: 0, //代表管理员
+				selectWarehouse: '',
+				warehouseData: [],
+				openId: ''
+			},
+			methods: {
+				showSearchView: function () {
+                    $('#toolbar .form-inline').toggle()
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-down')
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-up')
+                    app.methods.initBootstrapTableStyle();
+                },
+                initBootstrapTableStyle: function(){
+                    $('.panel .panel-body .bootstrap-table').css({
+                        'height':'calc(100% - '+$('#toolbar').outerHeight(true)+'px)'
+                    })
+                    $('.panel .panel-body .bootstrap-table .fixed-table-container').css({
+                        'height':'calc(100% - '+$('.panel .panel-body .bootstrap-table .fixed-table-container .fixed-table-pagination').outerHeight(true)+'px)'
+                    })
+                },
+				initTable: function () {
+					app.data.table.bootstrapTable({
+						pagination: true,
+						cache: false,
+						sortable: false,
+						sidePagination: "server",
+						clickToSelect: true,
+						templateView: false,
+						showHeader: true,
+						pageNumber: 1,
+						pageSize: 15,
+						pageList: [15, 30, 45, 90],
+						toolbarAlign: 'left',
+						queryParamsType: 'page',
+						queryParams: function (params) {
+							var status = $('#toolbar select[name=status]').val()
+							if(status != -1){
+								params.status = status;
+							}
+							params.productSkuBarcode = $('#toolbar input[name=skuCode]').val().trim();
+							params.purchaseCode = $('#toolbar input[name=orderNum]').val().trim();
+							params.waybillCode = $('#toolbar input[name=waybillCode]').val().trim();
+							var warehouseId = $('#toolbar select[name=warehouse]').select2('val');
+							if(warehouseId){
+								params.warehouseId = warehouseId[0];
+							}
+							params.size = params.pageSize;
+							params.page = parseInt(params.pageNumber) - 1;
+							return params;
+						},
+						url: utils.prePath() + '/api/admin/warehouse/inventory/purchase/list',
+						totalField: 'body.totalElements',
+						dataField: 'body.content',
+						columns: app.methods.optionByAuthority(),
+						onLoadSuccess: function (data) {
+							tableUi.initBootstrapTable();
+						},
+						onLoadError: function(result){
+							if(result == 403){
+								toastr.error("不允许访问")
+							}else{
+								toastr.error('系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+				},
+				optionByAuthority: function () {
+					var option = [{
+						field: 'productId',
+						title: 'ID',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+						}
+					}, {
+						field: 'productSkuBarcode',
+						title: '条形码',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+						}
+					}, {
+						field: 'purchaseCode',
+						title: '1688订单号',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+						}
+					}, {
+						field: 'productImageUrl',
+						title: '商品图',
+						align: 'center',
+						width: 60,
+						minWidth: 60,
+						formatter: function (value, row, index, field) {
+							return '<a href="#" onclick = "app.methods.preview('+row.productId+');"><img src="'+value+'" alt="'+row.productTitle+'" class="img-responsive proImage"></a>';
+						}
+					}, {
+						field: 'productTitle',
+						title: '品名',
+						minWidth: 200,
+						formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value + '（'+row.productSkuName+'）' || '--') + '</span>';
+						}
+					}, {
+						field: 'inventory',
+						title: '库存',
+						align: 'center',
+						formatter: function (value, row, index) {
+							return '<span class="text-length-table-col">' + value + '</span>';
+						}
+					}, {
+						field: 'willStorage',
+						title: '待入库',
+						align: 'center',
+						formatter: function (value, row, index) {
+							return '<span class="text-length-table-col">' + ((row.purchaseQuantity - 0) - (row.storageQuantity - 0)) + '</span>';
+						}
+					}, {
+						field: 'storageQuantity',
+						title: '已入库',
+						align: 'center',
+						formatter: function (value, row, index) {
+							return '<span class="text-length-table-col">' + value + '</span>';
+						}
+					}, {
+						field: 'status',
+						title: '状态',
+						align: 'center',
+						formatter: function (value, row, index) {
+							var dom = '';
+							switch(value){
+								case 0: dom += '<span class="text-length-table-col"><i class="fa fa-spinner fa-spin"></i></span>';break;
+								case 1: dom += '<span class="text-length-table-col"><i class="fa fa-check-square"></i></span>';break;
+								case 2: dom += '<span class="text-length-table-col"><i class="fa fa-window-close"></i></span>';break;
+							}
+							return dom;
+						}
+					}, {
+						field: 'toolbar',
+						title: '操作',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							if(row.status == 2 || row.status == 1){
+								return '';
+							}
+							var productTitle = "'" + row.productTitle + "'";
+							var productSkuBarcode = "'" + row.productSkuBarcode + "'";
+							var productImageUrl = "'" + row.productImageUrl + "'";
+							var purchaseCode = "'" + row.purchaseCode + "'";
+							var id = "'" + row.warehouseInventoryId + "'";
+							var num = "'" + ((row.purchaseQuantity - 0) - (row.storageQuantity - 0)) + "'";
+							var productSkuName = "'" + row.productSkuName + "'";
+							return '<a class="simpleBtn" href="#" onclick="app.methods.storage(' + productSkuBarcode + ',' + productImageUrl + ',' + productTitle + ',' + purchaseCode + ',' + id + ',' + num + ',' + productSkuName + ')">入库</a>'
+						}
+					}, {
+						field: 'storageList',
+						title: '入库明细',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							var id = "'" + row.warehouseInventoryId + "'"
+							var productTitle = "'" + row.productTitle + "'"
+							var purchaseCode = "'" + row.purchaseCode + "'"
+							return '<a class="simpleBtn" href="#" onclick="app.methods.showDetail(' + id + ',' + productTitle + ',' + purchaseCode + ')">查看明细</a>'
+						}
+					}, {
+						field: 'updatedAtString',
+						title: '最后入库时间',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+						}
+					}, {
+						field: 'updatedBy',
+						title: '入库员',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+						}
+					}];
+					return option;
+				},
+				preview : function(id){
+					layer.open({
+					  	type: 2,
+					  	title: '产品预览',
+					  	maxmin : true,
+					  	shadeClose: true,
+					  	resize : false,	
+					  	shade: 0.8,
+                        area: ['392px', '710px'],
+                        skin:'preview',  
+					  	content: utils.perviewPath(id)
+					});
+				},
+				showDetail: function (warehouseInventoryId, productTitle, purchaseCode) {
+					// 根据barCode 仓库名（不确定）获得对应数据
+					layer.open({
+						type: 1,
+						content: template('storageDetail', {
+							proName: productTitle
+						}),
+						area: ['800px', '600px'],
+						title: '入库变更明细',
+						skin: 'changeDetailBox'
+					});
+
+					$('#datetimepickerStart').datetimepicker({
+						language: 'zh-CN',
+						format: 'yyyy-mm-dd',
+						weekStart: 1,
+						todayBtn: 1,
+						autoclose: true,
+						minView: 2
+					});
+					$('#datetimepickerEnd').datetimepicker({
+						language: 'zh-CN',
+						format: 'yyyy-mm-dd',
+						weekStart: 1,
+						todayBtn: 1,
+						autoclose: true,
+						minView: 2
+					});
+
+					$('#changeDetailList').bootstrapTable({
+						pagination: true,
+						cache: false,
+						sortable: false,
+						sidePagination: "server",
+						showColumns: true,
+						clickToSelect: true,
+						templateView: false,
+						showHeader: true,
+						pageNumber: 1,
+						pageSize: 5,
+						showColumns: false,
+						toolbarAlign: 'left',
+						queryParamsType: 'page',
+						queryParams: function (params) {
+							params.size = params.pageSize;
+							params.page = parseInt(params.pageNumber) - 1;
+							return params;
+						},
+						url: utils.prePath() + '/api/admin/warehouse/inventory/' + warehouseInventoryId + '/change/list?type=1&purchaseCode='+purchaseCode,
+						totalField: 'body.totalElements',
+						dataField: 'body.content',
+						columns: app.methods.detailOption(),
+					});
+				},
+				detailOption: function () {
+					var opt = [{
+						field: 'updatedAt',
+						title: '变更时间',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+                            var time = moment(value.split(' ')[0] + ' ' + value.split(' ')[1]).format('YYYY-MM-DD HH:mm:ss');
+							return '<span class="text-length-table-col">' + time + '</span>';
+						}
+					}, {
+						field: 'beforeInventory',
+						title: '变更前',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + value + '</span>';
+						}
+					}, {
+						field: 'changeNum',
+						title: '变更数',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + ((row.afterInventory-0) - (row.beforeInventory-0)) + '</span>';
+						}
+					}, {
+						field: 'afterInventory',
+						title: '变更后',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + value + '</span>';
+						}
+					}, {
+						field: 'updatedBy',
+						title: '操作员',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+						}
+					}, {
+						field: 'waybillCode',
+						title: '物流单号',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+						}
+					}, {
+						field: 'expressCompany',
+						title: '物流公司',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+						}
+					}];
+					return opt;
+				},
+				inventorySave: function (productSkuBarcode, purchaseCode, id) {
+					var waybillCode = $('#expressNum').val();
+					var expressCompany = $('#expressCompany').select2('val')
+					var numFromExpress = $('#numFromExpress').val();
+					if(numFromExpress == 0){
+						toastr.error('入库数量不能为0...');
+						return false;
+					}
+					// if(!waybillCode || !expressCompany){
+					// 	toastr.error('入库信息不完整...');
+					// 	return false;
+					// }
+					$.ajax({
+						type: "POST",
+						url: utils.prePath() + "/api/admin/warehouse/inventory/" + id + "/receipt",
+						data: JSON.stringify({
+							purchaseCode: purchaseCode,
+							productSkuBarcode: productSkuBarcode,
+							quantity: $('#numFromExpress').val(),
+							waybillCode: waybillCode,
+							expressCompany: expressCompany ? expressCompany[0] : ''
+						}),
+						success: function (result) {
+							if (result.statusCode == 'OK') {
+								layer.close(app.data.openId)
+								app.data.table.bootstrapTable('refresh');
+							} else {
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+				},
+				changeNumFromExpress: function (num) {
+					var val = $('#numFromExpress').val() - 0;
+					if (num >= 0 && val >= 0 || num < 0 && val > 1) {
+						$('#numFromExpress').val(val + (num - 0))
+					}
+				},
+				storage: function (productSkuBarcode, proPic, proName, purchaseCode, id, num, productSkuName) {
+					var data = {
+						proPic: proPic,
+						proName: proName,
+						productSkuName: productSkuName,
+						expressCompany: app.data.expressCompany,
+						productSkuBarcode: productSkuBarcode,
+						purchaseCode: purchaseCode,
+						id: id,
+						num: num
+					};
+					var index = layer.open({
+						type: 1,
+						content: template('storage', data),
+						area: ['360px', 'auto'],
+						title: '入库',
+						skin: 'storageBox'
+					});
+					app.data.openId = index;
+					$('select[name="chooseExpress"]').select2({
+						data: app.data.expressCompany,
+						multiple: true,
+                        placeholder: "请选择物流公司",
+						maximumSelectionLength: 1,
+						tags: true,
+						width: '100%'
+					});
+				},
+				searchTable: function () {
+					app.data.table.bootstrapTable('refresh');
+				},
+				initSelect: function () {
+					$.ajax({
+						type: "get",
+						url: utils.prePath() + "/api/admin/warehouse/list",
+						async: false,
+						success: function (result) {
+							if (result.statusCode == 'OK') {
+								var data = [];
+								result.body.map(function (e) {
+									data.push({
+										id: e.id,
+										text: e.warehouseName,
+										username: e.username
+									})
+								})
+								$('select[name="warehouse"]').select2({
+									data: data,
+									placeholder: "选择接收仓库",
+									allowClear: true
+								});
+                                $('select[name="warehouse"]').val('').trigger('change')								
+								app.data.warehouseData = data;
+								app.data.selectWarehouse = data[0];
+							} else {
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+				},
+				initToolbar: function(){
+					// TODO
+					// 临时处理权限
+					var role = utils.cookie.getCookie('roles');
+					if(!role || role == ''){
+						top.location.href = '../login.html';
+					}
+					role = role[0];
+					if(role == '库管'){
+						var user_warehouse_id;
+						app.data.warehouseData.map(function(e){
+							if(e.username == utils.cookie.getCookie('username')){
+								user_warehouse_id = e.id;
+							}
+						})
+						$('select[name="warehouse"]').val(user_warehouse_id).trigger('change')
+						$('select[name="warehouse"]').next().hide()
+					}
+					$('#toolbar').show();
+				},
+                enterKey : function(){
+					$('#toolbar').keyup(function(event){
+					  	if(event.keyCode ==13){
+					    	app.methods.searchTable();
+					  	}
+					});
+				},
+			},
+			init: function () {
+				app.methods.initSelect();
+				app.methods.initToolbar();
+				app.methods.initTable();
+				app.methods.enterKey();
+			}
+		}
+
+		$(function () {
+			app.init();
+		});
+	</script>
+</html>

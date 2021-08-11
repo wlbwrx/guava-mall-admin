@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>退换货</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/bootstrap-select/css/bootstrap-select.min.css" />
+        <link rel="stylesheet" href="../dists/daterangepicker/daterangepicker.css" />
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<!-- <link rel="stylesheet" href="../dists/hint/hint.css"/> -->
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+			.commentsList{list-style: none;padding: 0;margin: 0;}
+			.commentsList li{border-bottom: 1px solid #ddd;padding: 6px;}
+			.commentsList li:last-child{border-bottom: 0;}
+			.commentsList li span{display: block;;white-space:nowrap;}
+
+			#returnSubmit .form-group{display: flex;}
+			#returnSubmit .form-group label{width: 120px}
+			#returnSubmit .form-group input{flex: 1}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="panel panel-headline">
+				<div class="panel-heading">
+					<div class="left">
+						<h3 class="panel-title">退换货</h3>
+						<div class="toolBox btn-group">
+							<button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i> 搜索</button>
+							<button class="btn btn-warning btn-sm export" authority="FINANCE_EXPORT" onclick="tools.exportByFrom('/api/admin/erp/rc/export');"><i class="fa fa-download"></i> 导出售后表</button>
+						</div>
+					</div>
+					<div class="toolBox btn-group right">
+						<button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+					</div>
+				</div>
+				<div class="panel-body">
+                    <div id="toolbar" class="btn-group">
+						<input type="text" inputTpye="daterange" rangeStart="createdBegainTime" rangeEnd="createdEndTime" class="form-control" name="afterOrderTimes" placeholder="选择时间" />
+						<!-- <select name="storehouseId" class="selectpicker" data-live-search="true" data-title="仓库"></select> -->
+                        <input type="text" class="form-control" name="tel" placeholder="电话">
+                        <input type="text" class="form-control" name="productSkuBarcode" placeholder="条形码">
+                        <input type="text" class="form-control" name="productTitle" placeholder="品名">
+                        <input type="text" class="form-control" name="orderCode" placeholder="订单号">
+                        <input type="text" class="form-control" name="productId" placeholder="产品ID">
+                        <input type="text" class="form-control" name="accountName" placeholder="账户名">
+						<input type="text" class="form-control" name="nickName" placeholder="昵称">
+						<select name="paymentType" class="selectpicker" data-live-search="true"></select>
+						<select name="status" class="selectpicker" data-live-search="true"></select>
+                        <button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+                    </div>
+					<table id="table-main"></table>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade" id="returnSubmit"  role="dialog">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title">退换货确认</h4>
+					</div>
+					<div class="modal-body">
+						<div class="form-group"><label>退货数量</label><input type="number" class="form-control" name="quantity"/></div>
+						<div class="form-group"><label>补差价</label><input type="number" class="form-control" name="returnsPrice" step="0.01" value="0"></div>
+						<div class="form-group"><label>昵称</label><input type="text" class="form-control" name="nickName"></div>
+						<div class="form-group"><label>售后来源</label><select name="returnsSource" class="selectpicker" data-live-search="true" data-title="售后来源"></select></div>
+						<div class="form-group"><label>处理方式</label><select name="returnHandleType" class="selectpicker" data-live-search="true" data-title="处理方式"></select></div>
+						<div class="form-group"><label>退货原因</label><select name="returnReason" class="selectpicker" data-live-search="true" data-title="退货原因"></select></div>
+						<div class="form-group"><label>处理结果</label><select name="returnHandleResult" class="selectpicker" data-live-search="true" data-title="处理结果"></select></div>
+						<div class="form-group"><label>寄回单号</label><input type="text" class="form-control" name="backTrackingNumber"></div>
+						<div class="form-group"><label>账户信息</label><input type="text" class="form-control" name="accountInfo"></div>
+						<div class="form-group"><label>账户姓名</label><input type="text" class="form-control" name="accountName"></div>
+						<div class="form-group"><label>账号</label><input type="text" class="form-control" name="accountNumber"></div>
+						<div class="form-group"><label>开户行</label><input type="text" class="form-control" name="accountBank"></div>
+						<div class="form-group"><label>新订单Code</label><input type="text" class="form-control" name="newOrderCode"></div>
+						<div class="form-group"><label>备注</label><input type="text" class="form-control" name="comments"></div>
+						<div class="form-group"><input type="text" class="form-control" name="id" style="display:none" disabled></div>
+						<div class="form-group"><input type="text" class="form-control" name="tel" style="display:none" disabled></div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+						<button type="button" class="btn btn-primary" onclick="app.methods.changeOrderSubmit();">提交</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-select/js/bootstrap-select.min.js" ></script>    
+	<script type="text/javascript" src="../js/moment.js"></script>
+    <script type="text/javascript" src="../dists/daterangepicker/daterangepicker.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/plupload.full.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/i18n/zh_CN.js"></script>
+	<script type="text/javascript" src="../js/plupload-upload.js"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+	<script type="text/javascript">
+		var app = {
+			data : {
+				table : $("#table-main"),
+                rcData: [],
+			},
+			methods : {
+				initTable : function(){
+					var authority_data = authoritys.useAuthority();
+					if(!authority_data){
+						toastr.error("权限不足，不允许访问...")
+						return;
+					}
+					app.data.table.bootstrapTable(Object.assign(tableUi.data.tableOption_page, {
+                        url: utils.prePath() + '/api/admin/erp/rc',
+						columns: app.methods.optionByAuthority(),
+						onLoadSuccess : function(data){
+							tableUi.initBootstrapTable();
+							authoritys.useAuthority();
+							app.data.rcData = data.body.content;
+					    },
+					}));
+				},
+                optionByAuthority: function () {
+                    var option = [{
+						field: 'order_code',title: '订单号',align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="nowarp">' + value + '</span>';
+                        }
+					}, {
+						field: 'storehouse_name',title: '商品圖',align: 'center',
+						formatter: function (value, row, index, field) {
+							return tools.formatterFunction.proImage(row.product_sku_image, row.product_id, row.product_title)
+                        }
+					}, {
+						field: 'product_title',title: '品名',align: 'center',minWidth:200,
+						formatter: function (value, row, index, field) {
+							return value + '(' + row.product_sku_name + ')';
+                        }
+					}, {
+						field: 'barcode',title: '条码',align: 'center',
+					}, {
+						field: 'quantity',title: '数量',align: 'center',
+					}, {
+						field: 'payment_type',title: '付款方式',align: 'center',
+						formatter: function (value, row, index, field) {
+							return tools.formatterFunction.paymentStatus(value);
+                        }
+					}, {
+						field: 'nick_name',title: '昵称',align: 'center',
+					}, {
+						field: 'tel',title: '电话',align: 'center'
+					}, {
+						field: 'returns_source',title: '售后来源',align: 'center',
+					}, {
+						field: 'return_handle_type',title: '处理方式',align: 'center',
+						formatter: function (value, row, index, field) {
+							return value ? '<span class="label label-info">' + value + '</span>' : '--'
+                        }
+					}, {
+						field: 'return_reason',title: '退货原因',align: 'center',
+					}, {
+						field: 'return_handle_result',title: '处理结果',align: 'center',
+					}, {
+						field: 'account_info',title: '账户信息',align: 'center',
+					}, {
+						field: 'account_name',title: '账户姓名',align: 'center',
+					}, {
+						field: 'account_number',title: '账号',align: 'center',
+					}, {
+						field: 'account_bank',title: '开户行',align: 'center',
+					}, {
+						field: 'status',title: '退换货状态',align: 'center',
+						formatter: function (value, row, index, field) {
+							return tools.formatterFunction.returnStatus(value);
+                        }
+					}, {
+						field: 'returns_price',title: '差价',align: 'center',
+					}, {
+						field: 'scope_name',title: '来源商城',align: 'center',
+					}, {
+						field: 'return_change_created_at',title: '售后申请时间',align: 'center',minWidth:90,
+                        formatter: function (value, row, index, field) {
+							return tools.formatterFunction.time(value);
+                        }
+					}, {
+						field: 'comments',title: '处理备注',align: 'center',minWidth:120,
+					}, {
+                        title: '操作',align: 'center',minWidth:180,
+                        formatter: function (value, row, index) {
+							if(row.status == 0){
+								return '<div class="toolBox btn-group">'+
+										'<button type="button" class="btn btn-info btn-xs" authority="FINANCE_WRITE" onclick="app.methods.changeOrder(' + index + ')">登记</button>'+
+										'<button type="button" class="btn btn-success btn-xs" authority="FINANCE_WRITE" onclick="app.methods.confirmChange(' + index + ')">确认完成</button>'+
+									'</div>';
+							}else{
+								if(row.new_order_code){
+									return '<span class="nowarp">新订单Code</span><br>' + row.new_order_code
+								}else {
+									return '售后完成'
+								}
+							}
+                        }
+					}];
+                    return option;
+				},
+				changeOrder: function(index){
+					$('#returnSubmit input').val('');
+					$('#returnSubmit select').each(function(){
+						$(this).selectpicker('val', '');
+					});
+					tools.initInput('#returnSubmit', tools.parameWritingType(app.data.rcData[index],'Upper'))
+					$('#returnSubmit input[name="id"]').val(app.data.rcData[index].return_change_id);
+					$('#returnSubmit input[name="tel"]').val(app.data.rcData[index].return_change_tel);
+					$('#returnSubmit select[name="returnHandleResult"]').selectpicker('val', app.data.rcData[index].return_handle_result).trigger("change");
+					$('#returnSubmit select[name="returnHandleType"]').selectpicker('val', app.data.rcData[index].return_handle_type).trigger("change");
+					$('#returnSubmit').modal('show');
+				},
+				changeOrderSubmit: function(){
+					$.ajax({
+						type: "PUT",
+						url: utils.prePath() + "/api/admin/erp/rc/products",
+						data: JSON.stringify([tools.getParams('#returnSubmit')]),
+						success: function (result) {
+							if (result.statusCode == 'OK') {
+								toastr.success('已提交...');
+								$('#returnSubmit').modal('hide');
+								app.data.table.bootstrapTable('refresh');
+							} else {
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+				},
+				confirmChange: function(index){
+					layer.prompt({title: '确认售后完成，请填写备注', value : app.data.rcData[index].comments}, function(text){
+						if(!text || text.trim() == '') {toastr.error('请填写备注...');return;}
+						$.ajax({
+							type: "PUT",
+							url: utils.prePath() + "/api/admin/erp/rc/products/confirm",
+							data: JSON.stringify([{
+								id: app.data.rcData[index].return_change_id,
+								status: "1",
+								comments: text.trim()
+							}]),
+							success: function (result) {
+								if (result.statusCode == 'OK') {
+									toastr.success('已提交...');
+									layer.closeAll();
+									app.data.table.bootstrapTable('refresh');
+								} else {
+									toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+								}
+							}
+						})
+					});
+				},
+                initSelect : function(){
+					tools.rangeTime('input[name="afterOrderTimes"]', true);
+					// tools.renderSelect.storehouse('select[name="storehouseId"]');                    
+					tools.renderSelect.returnStatus('select[name="status"]');    
+					tools.renderSelect.payment('select[name="paymentType"]');    
+					                
+					tools.renderSelect.returnsProValue('select[name="returnsSource"]','returnsSource');                    
+					tools.renderSelect.returnsProValue('select[name="returnHandleType"]','returnHandleType');                    
+					tools.renderSelect.returnsProValue('select[name="returnReason"]','returnReason');                    
+					tools.renderSelect.returnsProValue('select[name="returnHandleResult"]','returnHandleResult');                    
+				}
+			},
+			init : function(){
+				app.methods.initSelect();
+				app.methods.initTable();
+				tools.toolbarEnterEvent(function(){app.data.table.bootstrapTable('refresh')});
+			}
+		}
+		$(function(){
+			app.init();
+		});
+	</script>
+</html>

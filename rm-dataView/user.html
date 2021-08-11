@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Home</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<link rel="stylesheet" href="../dists/hint/hint.css"/>
+        <link rel="stylesheet" href="../dists/select2/dist/css/select2.css" />
+        <link rel="stylesheet" type="text/css" href="../dists/daterangepicker/daterangepicker.css" />
+        <link href="https://cdn.bootcss.com/flatpickr/4.4.6/flatpickr.min.css" rel="stylesheet">
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+			#toolbar.btn-group>.form-inline input{width: auto!important;}
+            @media screen and (max-width: 768px) {
+                #toolbar.btn-group > .form-inline input{width: 100% !important;}
+            }
+
+            .orderDate,.proDate{border: 1px solid rgb(214, 214, 214);font-size: 0;line-height: 32px;}
+            .orderDate input,.proDate input{border: none;height: 32px;}
+            .orderDate span,.proDate span{font-size: 14px;vertical-align: middle;padding-left: 6px;}
+		</style>
+	</head>
+	<body>
+        <div class="container-fluid">
+            <div class="panel panel-headline">
+                <div class="panel-heading">
+                    <h3 class="panel-title">用户下单分析</h3>
+                    <div class="toolBox btn-group">
+                        <button class="btn btn-warning btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i>&nbsp; 搜索 </button>
+                        <button class="btn btn-primary btn-sm" onclick="app.methods.downloadExcel();"><i class="fa fa-download"></i>&nbsp;&nbsp;导出分析表</button>
+                        <button class="btn btn-primary btn-sm" onclick="window.location.reload();"><i class="fa fa-refresh"></i>&nbsp;刷新页面</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div id="toolbar" class="btn-group">
+                            <input type="text" class="form-control" name="consignee" placeholder="输入用户名称" style="width: 150px;">
+                            <select type="text" class="form-control" name="scopeId" style="min-width: 150px;"></select>
+                            <input type="text" class="form-control" name="datetimes" placeholder="订单创建时间" style="min-width: 234px;" />
+                        <button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+                    </div>
+                    <table id="table-products"></table>
+                </div>
+            </div>
+        </div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../js/bootstrap-table-template.js"></script>
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+    <script type="text/javascript" src="../dists/select2/dist/js/select2.full.min.js"></script>
+    <script type="text/javascript" src="../dists/plupload-2.3.6/js/plupload.full.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/i18n/zh_CN.js"></script>
+    <script type="text/javascript" src="../js/plupload-upload.js"></script>
+    <script type="text/javascript" src="../dists/flatpickr/flatpickr.js"></script>
+    <script type="text/javascript" src="../dists/daterangepicker/daterangepicker.min.js"></script>
+    <script src="http://oss.sheetjs.com/js-xlsx/xlsx.core.min.js"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+    <script>
+        // <!-- https://gitee.com/baojuhua/lutils/blob/master/min/xlsx.utils.min.js -->
+        var xlsxUtils = (function () { var t = { Binary: { fixdata: function (e) { for (var r = "", t = 0, n = 10240; t < e.byteLength / n; ++t)r += String.fromCharCode.apply(null, new Uint8Array(e.slice(t * n, t * n + n))); return r += String.fromCharCode.apply(null, new Uint8Array(e.slice(t * n))) }, s2ab: function (e) { for (var r = new ArrayBuffer(e.length), t = new Uint8Array(r), n = 0; n != e.length; ++n)t[n] = 255 & e.charCodeAt(n); return r } }, _wb: null, _rABS: !1, import: function (e, r) { this.wb = null; var n = new FileReader; n.onload = function (e) { var n = e.target.result; t._wb = t._rABS ? XLSX.read(btoa(t.Binary.fixdata(n)), { type: "base64" }) : XLSX.read(n, { type: "binary" }), "function" == typeof r && r(t._wb) }, t._rABS ? n.readAsArrayBuffer(e) : n.readAsBinaryString(e) }, getSheetByName: function (e) { return XLSX.utils.sheet_to_json(t._wb.Sheets[e]) }, getSheetByIndex: function () { var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0; return t.getSheetByName(t._wb.SheetNames[e]) }, export: function (e, r) { var n = null; for (var o in e) { var a = t.format2Sheet(e[o]); n = t.format2WB(a, o, n) } return t.format2Blob(n, r) }, readDataHead: function (e) { var r = {}, t = Array.isArray(e) ? Object.keys(e[0]) : e, n = !0, o = !1, a = void 0; try { for (var i, f = t[Symbol.iterator](); !(n = (i = f.next()).done); n = !0) { var u = i.value; r[u] = u } } catch (e) { o = !0, a = e } finally { try { !n && f.return && f.return() } finally { if (o) throw a } } return r }, format2Sheet: function (e) { var r = Object.keys(e[0]), n = []; return e.map(function (e, n) { return r.map(function (r, o) { return Object.assign({}, { v: e[r], position: (o > 25 ? t.getCharCol(o) : String.fromCharCode(65 + o)) + (n + 1) }) }) }).reduce(function (e, r) { return e.concat(r) }).forEach(function (e, r) { return n[e.position] = { v: e.v } }), n }, format2WB: function (e) { var r = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "mySheet", t = arguments[2], n = Object.keys(e); return t || (t = new Object, t.Sheets = {}, t.SheetNames = []), t.SheetNames.push(r), t.Sheets[r] = Object.assign({}, e, { "!ref": n[0] + ":" + n[n.length - 1] }), t }, format2Blob: function (e, r) { return new Blob([t.Binary.s2ab(XLSX.write(e, { bookType: void 0 == r ? "xlsx" : r, bookSST: !1, type: "binary" }))], { type: "" }) }, getCharCol: function (e) { for (var r = "", t = 0; e > 0;)t = e % 26 + 1, r = String.fromCharCode(t + 64) + r, e = (e - t) / 26; return r } }; return t; })();
+    </script>
+    <script>
+        // <!-- https://gitee.com/baojuhua/lutils/blob/master/min/saveAs.min.js --> 
+        function saveAs(e, t) { if (!("string" != typeof e || e.length <= 0)) { var n = document.createElement("a"); n.id = "download-" + Date.parse(new Date), n.href = e, n.download = t || "", n.style = "opacity: 0;height: 1px;width: 1px;overflow: hidden;position:fixed;top: -1;left: -1;z-index: -1;", document.body.appendChild(n), document.getElementById(n.id).click(), document.body.removeChild(document.getElementById(n.id)) } }
+    </script>
+    <!-- userOrderList -->
+    <script type="text/html" id="userOrderList">
+        <table class="userOrderTable  table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <td>订单号</td>
+                    <td>总价</td>
+                    <td>运费</td>
+                    <td>下单时间</td>
+                    <td>来源商城</td>
+                    <td>订单状态</td>
+                    <td>客户名称</td>
+                    <td>客户电话</td>
+                    <td>客户邮箱</td>
+                    <td>数量</td>
+                </tr>
+            </thead>
+            <tbody>
+                <% for(var i = 0; i < data.length; i++){ %>
+                    <tr>
+                        <td><%= data[i].code %></td>
+                        <td><%= data[i].totalPrice %></td>
+                        <td style="min-width:60px;"><%= data[i].freight %></td>
+                        <td style="min-width:150px;"><%= data[i].createdAt %></td>
+                        <td style="min-width:100px;"><%= data[i].name %></td>
+                        <td style="min-width:80px;"><%= data[i].statusName %></td>
+                        <td style="min-width:80px;"><%= data[i].consignee %></td>
+                        <td><%= data[i].tel %></td>
+                        <td style="min-width:80px;"><%= data[i].email %></td>
+                        <td style="min-width:60px;"><%= data[i].quantities %></td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </script>
+
+    <script type="text/javascript">
+        var app = {
+            data: {
+                table: $("#table-products"),
+            },
+            methods: {
+                showSearchView: function () {
+                    $('#toolbar .form-inline').toggle()
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-down')
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-up')
+                    app.methods.initBootstrapTableStyle();
+                },
+                initBootstrapTableStyle: function(){
+                    $('.panel .panel-body .bootstrap-table').css({
+                        'height':'calc(100% - '+$('#toolbar').outerHeight(true)+'px)'
+                    })
+                    $('.panel .panel-body .bootstrap-table .fixed-table-container').css({
+                        'height':'calc(100% - '+$('.panel .panel-body .bootstrap-table .fixed-table-container .fixed-table-pagination').outerHeight(true)+'px)'
+                    })
+                },
+                searchTable: function () {
+                    app.data.table.bootstrapTable('refresh');
+                },
+                initTable: function () {
+                    app.data.table.bootstrapTable({
+                        showExport: true,  //是否显示导出按钮  
+                        pagination: true,
+                        cache: false,
+                        sortable: false,
+                        sidePagination: "server",
+                        clickToSelect: true,
+                        templateView: false,
+                        showHeader: true,
+                        pageNumber: 1,
+                        pageSize: 30,
+                        pageList: [30, 60, 100],
+                        toolbarAlign: 'left',
+                        queryParamsType: 'page',
+                        queryParams: function (params) {    
+                            params.consignee = $('#toolbar input[name=consignee]').val().trim();
+                            var scopeId = $('#toolbar select[name=scopeId]').select2('val');
+                            params.scopeId = scopeId == -1 ? '' : scopeId ; 
+                            var datetimes = $("input[name='datetimes']").val().trim();
+                            var orderCreateBeginTime = datetimes.split(' - ')[0];
+                            var orderCreateEndTime = datetimes.split(' - ')[1];
+                            if(orderCreateBeginTime && orderCreateBeginTime.trim() != 'Invalid date'){
+                                if(moment(orderCreateBeginTime).get('minute') == 59){
+                                    orderCreateBeginTime = moment(orderCreateBeginTime).set('second', 59).unix();
+                                }else{
+                                    orderCreateBeginTime = moment(orderCreateBeginTime).set('second', 00).unix();
+                                }
+                                params.orderCreateBeginTime = orderCreateBeginTime;
+                            }
+                            if(orderCreateEndTime && orderCreateEndTime.trim() != 'Invalid date'){
+                                if(moment(orderCreateEndTime).get('minute') == 59){
+                                    orderCreateEndTime = moment(orderCreateEndTime).set('second', 59).unix();
+                                }else{
+                                    orderCreateEndTime = moment(orderCreateEndTime).set('second', 00).unix();                                    
+                                }
+                                params.orderCreateEndTime = orderCreateEndTime;
+                            }
+                            
+                            params.size = params.pageSize;
+                            params.page = parseInt(params.pageNumber) - 1;
+                            return params;
+                        },
+                        url: utils.prePath() + '/api/admin/order/analysis/user/list',
+                        totalField: 'body.totalElements',
+                        dataField: 'body.content',
+                        columns: app.methods.optionByAuthority(),
+                        onLoadSuccess: function (data) {
+							tableUi.initBootstrapTable();
+                            app.data.userData = data.body.content
+                        },
+						onLoadError: function(result){
+							if(result == 403){
+								toastr.error("不允许访问")
+							}else{
+								toastr.error('系统异常,请稍候重试或联系开发人员...');
+							}
+                        }
+                    });
+                },
+                optionByAuthority: function () {
+                    var option = [];
+                    option.push({
+                        field: 'consignee',
+                        title: '客戶姓名',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<a class="simpleBtn" onclick="app.methods.showDetail('+index+')">' + (value || '--') + '</a>';
+                        }
+                    },{
+                        field: 'totalPrice',
+                        title: '总花费',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'freight',
+                        title: '总运费',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + value + '</span>';
+                        }
+                    },{
+                        field: 'skuCount',
+                        title: 'SKU数量',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'orderCount',
+                        title: '订单数量',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'orderAvgSkuCount',
+                        title: '平均单件数',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'orderAvgPrice',
+                        title: '客单价',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'skuAvgPrice',
+                        title: '件单价',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'lastOrderTime',
+                        title: '最后购买时间',
+                        align: 'center',
+                        minWidth: 120,
+                        formatter: function (value, row, index, field) {
+                            var time = moment(value.split(' ')[0] + ' ' + value.split(' ')[1]).format('YYYY-MM-DD HH:mm:ss');
+                            return '<span class="text-length-table-col">' + time + '</span>';
+                        }
+                    });
+                    return option;
+                },
+                downloadExcel: function () {
+                    var params = '';
+                    var consignee = $('#toolbar input[name=consignee]').val().trim();
+                    if(consignee){
+                        params += '&consignee=' + consignee;
+                    }
+                    var scopeId = $('#toolbar select[name=scopeId]').select2('val');
+                    if(scopeId != -1){
+                        params += '&scope=' +  scopeId;
+                    }
+                    var datetimes = $("input[name='datetimes']").val().trim();
+                    var orderCreateBeginTime = datetimes.split(' - ')[0];
+                    var orderCreateEndTime = datetimes.split(' - ')[1];
+                    if(orderCreateBeginTime && orderCreateBeginTime.trim() != 'Invalid date'){
+                        if(moment(orderCreateBeginTime).get('minute') == 59){
+                            orderCreateBeginTime = moment(orderCreateBeginTime).set('second', 59).unix();
+                        }else{
+                            orderCreateBeginTime = moment(orderCreateBeginTime).set('second', 00).unix();
+                        }
+                        params += '&orderCreateBeginTime=' + orderCreateBeginTime;
+                    }
+                    if(orderCreateEndTime && orderCreateEndTime.trim() != 'Invalid date'){
+                        if(moment(orderCreateEndTime).get('minute') == 59){
+                            orderCreateEndTime = moment(orderCreateEndTime).set('second', 59).unix();
+                        }else{
+                            orderCreateEndTime = moment(orderCreateEndTime).set('second', 00).unix();                                    
+                        }
+                        params += '&orderCreateEndTime=' + orderCreateEndTime;
+                    }
+
+                    window.open(utils.prePath() + "/api/admin/order/analysis/user/export?access_token="+utils.cookie.getCookie('accessToken') + params);
+                },
+                showDetail: function(index){
+                    $.ajax({
+                        type : "GET",
+                        url : utils.prePath()+"/api/admin/order/analysis/user/details",
+                        data: {consignee : app.data.userData[index].consignee},
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                var data = [];
+                                result.body.map(function(e){
+                                    var a = e;
+                                    a.createdAt = moment(e.createdAt).format('YYYY-MM-DD HH:mm:ss');
+                                    data.push(a);
+                                })
+                                var index = layer.open({
+                                    type: 1,
+                                    content: template('userOrderList', {
+                                        data: data
+                                    }),
+                                    area: ['calc(100vw - 10px)', 'calc(100vh - 10px)'],
+                                    title: '订单详情',
+                                    skin: 'userOrderList',
+                                    closeBtn: 1
+                                });
+                            }else{
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    })
+                },
+                initSelect2: function () {
+                    $.ajax({
+                        type : "GET",
+                        url : utils.prePath()+"/api/admin/scope/list",
+                        async : false,
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                var data = [{
+                                    id: -1,
+                                    text: '全部',                                    
+                                }];
+                                result.body.content.map(function (e) {
+                                    data.push({
+                                        id: e.id,
+                                        text: e.name,
+                                    })
+                                })
+                                $('select[name="scopeId"]').select2({
+                                    data: data,
+                                    placeholder: "选择来源商城",
+                                    allowClear: true,
+                                    width:'100%'
+                                });
+                                app.data.scopeData = result.body.content;
+                            }else{
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    })
+                },
+                initDatePicker(){
+                    $('input[name="datetimes"]').daterangepicker({
+                        "timePicker": true,
+                        "timePicker24Hour": true,
+                        "startDate": false,
+                        "endDate": false,
+                        "ranges": {
+                            '今天': [moment().hours(0).minutes(0), moment()],
+                            '昨天': [moment().subtract(1, 'days').hours(0).minutes(0), moment().hours(0).minutes(0)],
+                            '7天': [moment().subtract(7, 'days').hours(0).minutes(0), moment().hours(0).minutes(0)],
+                            '30天': [moment().subtract(30, 'days').hours(0).minutes(0), moment().hours(0).minutes(0)],
+                            '这个月': [moment().startOf('month').hours(0).minutes(0), moment().endOf('month').hours(0).minutes(0)],
+                            '上个月': [moment().subtract(1, 'month').startOf('month').hours(0).minutes(0), moment().subtract(1, 'month').endOf('month').hours(0).minutes(0)]
+                        },
+                        "locale": {
+                            "format": 'YYYY-MM-DD HH:mm',
+                        }
+                    }).val('');
+                    if(/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)){
+                        $('input[name="datetimes"]').off().flatpickr({
+                            mode: "range",
+                            enableTime: true,
+                            allowInput: true
+                        });
+                    }
+                },
+                enterKey : function(){
+					$('#toolbar').keyup(function(event){
+					  	if(event.keyCode ==13){
+					    	app.methods.searchTable();
+					  	}
+					});
+				},
+            },
+            init: function () {
+                app.methods.initSelect2();
+                app.methods.initDatePicker();
+                app.methods.initTable();
+				app.methods.enterKey();
+            }
+        }
+
+        $(function () {
+            app.init();
+        });
+    </script>
+</html>

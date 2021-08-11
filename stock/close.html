@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>采购单回收站</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/bootstrap-select/css/bootstrap-select.min.css" />
+        <link rel="stylesheet" href="../dists/daterangepicker/daterangepicker.css" />
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<!-- <link rel="stylesheet" href="../dists/hint/hint.css"/> -->
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+			.orderUpdate{cursor: pointer;}
+			.stockInfoBox li span:nth-child(3){
+				width:auto;
+			}
+			.stockInfoBox li span:nth-child(1){
+				width:auto;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="panel panel-headline">
+				<div class="panel-heading">
+					<div class="left">
+						<h3 class="panel-title">采购单回收站</h3>
+						<div class="toolBox btn-group">
+							<button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i>&nbsp; 搜索 </button>
+							<button class="btn btn-warning btn-sm export" authority="PURCHASED_EXPORT" onclick="app.methods.exportTable()"><i class="fa fa-download"></i> 导出</button>
+						</div>
+						<span id="purchasedInfo"></span>
+					</div>
+					<div class="toolBox btn-group right">
+						<button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+					</div>
+				</div>
+				<div class="panel-body">
+					<div id="toolbar" class="btn-group">
+						<input type="text" inputTpye="daterange" rangeStart="createdBegainTime" rangeEnd="reatedEndTime" class="form-control" name="purchasedTimes" placeholder="选择时间" />
+                        <select name="storehouseId" class="selectpicker" data-live-search="true" data-title="仓库选择"></select>
+                        <select name="purchasedStatus" class="selectpicker" data-live-search="true" data-title="全部状态"></select>
+						<input type="text" class="form-control" name="purchasedCode" placeholder="采购单号">
+						<div class="ajaxpicker form-control" name="supplierId"></div>
+						<input type="text" class="form-control" name="productTitle" placeholder="输入品名">
+						<input type="text" class="form-control" name="productId" placeholder="产品ID">
+						<input type="text" class="form-control" name="productSkuBarcode" placeholder="输入条形码">
+						<!-- <input type="text" class="form-control" name="cancelReson" placeholder="输入原因"> -->
+						<select name="cancelReson" class="selectpicker" data-live-search="true">
+							<option value="">全部(不限原因)</option>
+							<option value="超时关闭">超时关闭</option>
+							<option value="错采">错采</option>
+							<option value="超时未发货">超时未发货</option>
+							<option value="物流异常-退款重采">物流异常-退款重采</option>
+							<option value="无货补采">无货补采</option>
+							<option value="无货已退款挂起">无货已退款挂起</option>
+							<option value="错发">错发</option>
+							<option value="漏发">漏发</option>
+							<option value="质量问题">质量问题</option>
+							<option value="其他">其他</option>
+						</select>
+						<input type="text" class="form-control inputReason" style="width:220px;display:none;" placeholder="请输入原因">
+						<input type="text" class="form-control" name="createdBy" placeholder="入库员">
+						<input type="text" class="form-control" name="updatedBy" placeholder="最后操作人">
+						<input type="text" inputTpye="daterange" rangeStart="updateAtBegainTime" rangeEnd="updateAtEndTime" class="form-control" name="updateTimes" placeholder="最后更新时间" />
+                        <button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+						<button class="btn btn-success" onclick="app.methods.returnBack()"><i class="fa fa-refresh"></i>&nbsp;&nbsp;恢复至采购单</button>
+					</div>
+					<table id="table-main"></table>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+    <script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-select/js/bootstrap-select.min.js" ></script>    
+	<script type="text/javascript" src="../js/moment.js"></script>
+    <script type="text/javascript" src="../dists/daterangepicker/daterangepicker.min.js"></script>
+    <script type="text/javascript" src="../dists/plupload-2.3.6/js/plupload.full.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/i18n/zh_CN.js"></script>
+	<script type="text/javascript" src="../js/plupload-upload.js"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20201205"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20201205"></script>
+	<script type="text/javascript">
+		var app = {
+			data : {
+				table : $("#table-main"),
+                scopeData: cacheSessionStorage.getCache('scope'),
+			},
+			methods : {
+				initTable : function(){
+					var authority_data = authoritys.useAuthority();
+					if(!authority_data){
+						toastr.error("权限不足，不允许访问...")
+						return;
+					}
+					app.data.table.bootstrapTable(Object.assign(tableUi.data.tableOption_page, {
+						url: utils.prePath() + '/api/admin/erp/purchased/list?purchasedStatus=-10',
+						queryParams: function (params) { 
+							params.size = params.pageSize;
+                            params.page = parseInt(params.pageNumber)-1;
+							let newCancelReson = tools.getParams()
+							if(newCancelReson.cancelReson == '其他'){
+								newCancelReson.cancelReson = $('input.inputReason').val()
+							}else{
+								newCancelReson.cancelReson = $('select[name="cancelReson"]').val() + $('input.inputReason').val()
+							}
+							delete params['pageSize'];
+                            delete params['pageNumber'];
+                            delete params['sortName'];
+							delete params['sortOrder'];
+							return Object.assign(params, newCancelReson);
+                        },
+						columns: app.methods.optionByAuthority(),
+						onLoadSuccess : function(data){
+							app.data.purchaseData = data.body.content;
+							tableUi.initBootstrapTable();
+							authoritys.useAuthority();
+							app.methods.initToggleOrder();
+					    },
+					}));
+				},
+				exportTable: function(){
+					let newCancelReson = tools.getParams()
+					if(newCancelReson.cancelReson == '其他'){
+						newCancelReson.cancelReson = $('input.inputReason').val()
+					}else{
+						newCancelReson.cancelReson = $('select[name="cancelReson"]').val() + $('input.inputReason').val()
+					}
+					tools.exportByFrom('/api/admin/erp/purchased/list/export',Object.assign(newCancelReson,{'purchasedStatus':-10}));
+				},
+                optionByAuthority: function () {
+                    var option = [{
+						checkbox: true
+					},{
+						field: 'purchased_code',title: '采购单号',align: 'center',
+						formatter: function (value, row, index, field) {
+							return value + '<span class="nowarp" style="display:block;">（共' + row.sku_quantities + '个SKU）</span>';
+                        }
+					}, {
+                        field: 'purchased_quantities',title: '采购进度',align: 'center',
+                        formatter: function (value, row, index, field) {
+							var progress = (row.storaged_quantities - 0) / (value - 0);
+							var color = '',html = "";
+							if(progress > 1){
+								color = 'text-muted';
+								html += '超额到货'
+							}else if(progress == 1){
+								color = 'text-success';
+							}else if(progress >= 0.6){
+								color = 'text-warning';
+							}else{
+								color = 'text-danger';
+							}
+							html += '<span class="' + color + '" style="font-weight:700;">' + (progress * 100).toFixed(2) + '%<br>（' + row.storaged_quantities + '/' + value + '）</span>';
+							return html
+                        }
+					}, {
+						field: 'storehouse_name',title: '仓库',align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="nowarp">' + value + '</span>';
+                        }
+					}, {
+                        field: 'purchased_prices',title: '总花费',align: 'center',
+                        formatter: function (value, row, index, field) {
+							return '<div><span class="money">' + value + '</span><div class="nowarp"><i class="fa fa-plane"></i>&nbsp;'+ row.purchase_freight_price + '</div></div>';
+                        }
+					}, {
+						field: 'sku_infos',title: '<span class="columnsTit">商品信息</span><ul class="stockInfoBox"><li><span style="width:100px;">产品ID</span><span>条码</span><span>SKU图</span><span style="width:300px;">品名（货源名）</span><span>入库进度</span><span>采购价</span><span style="width:200px;">原因</span></li></ul>',
+						formatter: function (value, row, index, field) {
+							return tools.formatterFunction.stockSkuInfos(value, false, true, true);
+                        }
+					}, {
+						field: 'express_infos',title: '<span class="columnsTit">物流信息</span><ul class="expressInfoBox"><li><span>物流公司</span><span>物流单号</span><span>操作</span></li></ul>',
+						formatter: function (value, row, index, field) {
+							return tools.formatterFunction.expressInfos(value);
+                        }
+					}, {
+						field: 'supplier_name',title: '供应商',minWidth:150,
+					}, {
+						field: 'created_by',title: '入库员',align: 'center',
+					}, {
+						field: 'comments',title: '备注',minWidth:150,
+					}, {
+						field: 'created_at',title: '采购时间',align: 'center',minWidth:90,						
+						formatter: function (value, row, index, field) {
+							return tools.formatterFunction.time(value);
+                        }
+					}, {
+						field: 'updated_at',title: '最后更新时间',align: 'center',minWidth:90,						
+						formatter: function (value, row, index, field) {
+							return tools.formatterFunction.time(value);
+                        }
+					}, {
+						field: 'updated_by',title: '最后操作人',align: 'center',
+					}, {
+						field: 'cancel_reson',title: '原因',minWidth:150,
+					}, {
+						title: '操作',align: 'center',minWidth:240,						
+						formatter: function (value, row, index, field) {
+							var html = '<button type="button" class="btn btn-warning btn-xs" authority="PURCHASED_EXPORT" onclick="tools.exportByFrom(\'/api/admin/erp/purchased/purchasedCode/export\',{\'purchasedStatus\':\'-10\',\'purchasedCode\':\'' + row.purchased_code + '\'});"><i class="fa fa-download"></i> 导出详情</button>';
+							return html;
+                        }
+					}];
+                    return option;
+				},
+				initToggleOrder: function(){
+					$('.toggleOrder').on('click',function(){
+						if($(this).parent().parent().hasClass('showAll')){
+							$(this).text('展开').parent().parent().removeClass('showAll');
+						}else{
+							$(this).text('收起').parent().parent().addClass('showAll');
+						}
+					})
+				},
+				initSelect : function(){
+					tools.rangeTime('input[name="purchasedTimes"]');
+					tools.rangeTime('input[name="updateTimes"]', true);
+					tools.renderSelect.supplier('supplierId');
+					tools.renderSelect.purchasedStatus('select[name="purchasedStatus"]');
+					tools.renderSelect.storehouse('select[name="storehouseId"]');
+                },
+				returnBack: function(){
+					let selectType= app.data.table.bootstrapTable('getSelections'),hasChoose=[],parame=[]
+					if(selectType.length == 0){
+						toastr.warning('请选择后再操作···')
+						return false
+					}
+					selectType.map((item, index)=>{
+						hasChoose.push(item.purchased_code)
+						parame.push(item.purchased_id)
+					})
+					let formDataS = new FormData();
+					formDataS.append('purchasedIdList',parame.join(','))
+					layer.confirm('确定要将' + hasChoose.join(',') + '恢复至采购单吗？', {
+						btn: ['确定','取消'] //按钮
+					}, function(_index){
+						
+						$.ajax({
+							type: "POST",
+							async: false,
+							url: utils.prePath() + "/api/admin/erp/purchased/recycle/rollback",
+							data: formDataS,
+							contentType: false,
+                    		processData: false,
+							success: function (result) {
+								if (result.statusCode == 'OK') {
+									app.data.table.bootstrapTable('refresh');
+									toastr.success('操作成功');
+					  				layer.close(_index);	
+								}
+							}
+						});
+					}, function(){
+						
+					});
+				}
+			},
+			init: function(){
+				app.methods.initSelect();
+				app.methods.initTable();
+				tools.toolbarEnterEvent(function(){app.data.table.bootstrapTable('refresh')});
+				$('select[name="cancelReson"]').change(function(){
+					let thisValue = $(this).val()
+					$('input.inputReason').val('')
+					if(thisValue == '错发' || thisValue == '其他'){
+						$('input.inputReason').show()
+					}else{
+						$('input.inputReason').hide()
+					}
+				})
+			}
+		}
+		$(function(){
+			app.init();
+		});
+	</script>
+</html>

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>满减优惠</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+        <link rel="stylesheet" href="../dists/bootstrap-select/css/bootstrap-select.min.css" />
+        <link rel="stylesheet" href="../dists/easyui/themes/bootstrap/easyui.css">
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+        <link rel="stylesheet" href="../dists/select2/dist/css/select2.css" />
+        <link rel="stylesheet" type="text/css" href="../dists/daterangepicker/daterangepicker.css" />
+        <link href="https://cdn.bootcss.com/flatpickr/4.4.6/flatpickr.min.css" rel="stylesheet">
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+            span.select2{min-width: 150px;}
+            
+            .couponTypeSelect input[type="number"]{display: inline-block;width: 80px;margin: 0 6px;padding: 0 6px;height: 24px;}
+            .couponTypeSelect .label{margin: 0 6px;}
+            .couponTypeSelect > div{margin: 0 0 10px 0;display: flex;}
+
+            .dialog-set-time input[type="datetime-local"]{width: 200px;margin: 0 6px 10px;padding: 0 6px;height: 24px;}
+            .dialog-set-time input[type="number"]{width: 100px;margin: 0 6px 10px;padding: 0 6px;height: 24px;}
+            .dialog-set-time input + div{display: inline-flex}
+            .newCateLevel{
+				border:1px solid #d6d6d6;cursor:pointer;position:relative;height:36px;
+			}
+			.newCateLevel .bs-caret{
+				position:absolute;top: 7px;right: 10px;
+			}
+			.levelName{
+				font-size: 14px;margin-top: 6px;float: left;margin-left: 14px;
+			}
+			.levelDetail{
+				width:220px;height:220px;
+				overflow: auto;position: absolute;top: 35px;left: 0;
+				background: #fff;z-index: 1;border: 1px solid #ddd;
+			}
+			.newtree {
+				min-height:20px;
+				margin-bottom:20px;
+				padding:0 10px;
+			}
+			.newtree ul{
+				padding-left:20px;
+			}
+			.newtree ul#newtreeIn{
+				padding-left:0;
+			}
+			.newtree li {
+				list-style-type:none;
+				margin:0;
+				padding:5px 5px 0 5px;
+				position:relative;
+				min-width:150px;
+			}
+			.newtree li::before, .newtree li::after {
+				content:'';
+				left:-20px;
+				position:absolute;
+				right:auto
+			}
+            [class^="icon-"], [class*=" icon-"]{
+				display: inline-block;
+				width: 14px;
+				height: 14px;
+				margin-right: .3em;
+				line-height: 14px;
+				vertical-align: text-top;
+				position: relative;
+    			top: -2px;
+			}
+			.icon-plus-sign{
+				background-image: url('../dists/easyui/themes/bootstrap/images/tree_icons.png');
+				background-position:0 0;
+				background-repeat: no-repeat;
+			}
+			.icon-minus-sign{
+				background-image: url('../dists/easyui/themes/bootstrap/images/tree_icons.png');
+				background-position:-18px 0;
+				background-repeat: no-repeat;
+			}
+			.newtree li::before {
+				/* border-left:1px solid #999; */
+				bottom:50px;
+				height:100%;
+				top:0;
+				width:1px
+			}
+			.newtree li::after {
+				/* border-top:1px solid #999; */
+				height:20px;
+				top:25px;
+				width:25px
+			}
+			.newtree li span {
+				-moz-border-radius:5px;
+				-webkit-border-radius:5px;
+				/* border:1px solid #999; */
+				border-radius:5px;
+				display:inline-block;
+				padding:0;
+				text-decoration:none;
+				/* background:#fff; */
+				color:#333;
+				font-size:12px;
+			}
+			/* .newtree li span:hover{
+				background:#f2f2f2;
+			} */
+			.newtree li.parent_li>span {
+				cursor:pointer
+			}
+			.newtree>ul>li::before, .newtree>ul>li::after {
+				border:0
+			}
+			.newtree li.parent_li>span:hover, .newtree li.parent_li>span:hover+ul li span {
+				/* background:#eee; */
+				/* border:1px solid #94a0b4; */
+				color:#00a0f0
+			}
+			.tree-file,.tree-folder{
+				display: inline-block;
+				width: 16px;
+				height: 18px;
+				margin: 4px 0;
+				vertical-align: middle;
+				overflow: hidden;
+				position: relative;
+				top: -2px;
+				left: -2px;
+			}
+			.tree-file{
+				background: url('../dists/easyui/themes/bootstrap/images/tree_icons.png') no-repeat -240px 0;
+			}
+			.tree-folder{
+				background: url('../dists/easyui/themes/bootstrap/images/tree_icons.png') no-repeat -208px 0;	
+			}
+            .red{color: red}
+		</style>
+	</head>
+	<body>
+        <div class="container-fluid">
+            <div class="panel panel-headline">
+                <div class="panel-heading">
+                    <div class="left">
+                        <h3 class="panel-title">满减优惠列表</h3>
+                        <div class="toolBox btn-group">
+                            <!-- <button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i> 搜索</button> -->
+                            <button class="btn btn-primary btn-sm" onclick="app.methods.addCoupon();"><i class="fa fa-plus-square"></i>&nbsp;&nbsp;新增满减活动</button>
+                        </div>
+                    </div>
+                    <div class="toolBox btn-group right">
+                        <button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <!-- <div id="toolbar" class="btn-group">
+                        <select name="couponsList" class="selectpicker" data-live-search="true" data-title="所有折扣券"></select>
+                        <button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+                    </div> -->
+                    <table id="table-coupon"></table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal fade dialog-create-coupon" role="dialog" data-backdrop="static">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-wrapper">
+                        <div class="modal-menu">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title">新增活动</h4>
+                            </div>
+                            <div class="modal-body" style="height:550px;overflow-y: auto;">
+                                <form role="form">
+                                    <div class="form-group row">
+                                        <label class="control-label col-sm-2">活动标题<span class="red">*</span></label>
+                                        <div class="col-sm-10">
+                                            <input class="form-control" type="text" name="couponName" placeholder="请填写活动名称" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="control-label col-sm-2">活动详情<span class="red">*</span></label>
+                                        <div class="couponTypeSelect col-sm-10">
+                                            <div>
+                                                <span>已添加活动：</span>
+                                                <div class="hasAdd" id="hasAdd">
+                                                    
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div>
+                                                    满
+                                                    <input class="form-control" type="number" name="priceCritical" min='0'>
+                                                    (TWD)减
+                                                    <input class="form-control" type="number" name="priceLessen" min="0">
+                                                    (TWD)
+                                                </div>
+                                                <button type="button" class="btn btn-primary" onclick="app.methods.addActCounp()">添加</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="control-label col-sm-2">使用期限<span class="red">*</span></label>
+                                        <div class="col-sm-10">
+                                            <input type="text" inputTpye="daterange" rangeStart="startTime" rangeEnd="endTime" class="form-control" name="timeLimit" placeholder="选择时间期限" autocomplete="off"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="control-label col-sm-2">备注</label>
+                                        <div class="col-sm-10">
+                                            <input class="form-control" type="text" name="comments" />
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" commit>确定</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+    <script type="text/javascript" src="../dists/bootstrap-select/js/bootstrap-select.min.js" ></script>    
+	<script type="text/javascript" src="../js/bootstrap-table-template.js"></script>
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+    <script type="text/javascript" src="../dists/easyui/jquery.easyui.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../dists/easyui/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../dists/select2/dist/js/select2.full.min.js"></script>
+    <script type="text/javascript" src="../dists/plupload-2.3.6/js/plupload.full.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/i18n/zh_CN.js"></script>
+    <script type="text/javascript" src="../js/plupload-upload.js"></script>
+    <script type="text/javascript" src="../dists/flatpickr/flatpickr.js"></script>
+    <script type="text/javascript" src="../dists/daterangepicker/daterangepicker.min.js"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+    <script src="http://oss.sheetjs.com/js-xlsx/xlsx.core.min.js"></script>
+    <script>
+        // <!-- https://gitee.com/baojuhua/lutils/blob/master/min/xlsx.utils.min.js -->
+        var xlsxUtils = (function () { var t = { Binary: { fixdata: function (e) { for (var r = "", t = 0, n = 10240; t < e.byteLength / n; ++t)r += String.fromCharCode.apply(null, new Uint8Array(e.slice(t * n, t * n + n))); return r += String.fromCharCode.apply(null, new Uint8Array(e.slice(t * n))) }, s2ab: function (e) { for (var r = new ArrayBuffer(e.length), t = new Uint8Array(r), n = 0; n != e.length; ++n)t[n] = 255 & e.charCodeAt(n); return r } }, _wb: null, _rABS: !1, import: function (e, r) { this.wb = null; var n = new FileReader; n.onload = function (e) { var n = e.target.result; t._wb = t._rABS ? XLSX.read(btoa(t.Binary.fixdata(n)), { type: "base64" }) : XLSX.read(n, { type: "binary" }), "function" == typeof r && r(t._wb) }, t._rABS ? n.readAsArrayBuffer(e) : n.readAsBinaryString(e) }, getSheetByName: function (e) { return XLSX.utils.sheet_to_json(t._wb.Sheets[e]) }, getSheetByIndex: function () { var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0; return t.getSheetByName(t._wb.SheetNames[e]) }, export: function (e, r) { var n = null; for (var o in e) { var a = t.format2Sheet(e[o]); n = t.format2WB(a, o, n) } return t.format2Blob(n, r) }, readDataHead: function (e) { var r = {}, t = Array.isArray(e) ? Object.keys(e[0]) : e, n = !0, o = !1, a = void 0; try { for (var i, f = t[Symbol.iterator](); !(n = (i = f.next()).done); n = !0) { var u = i.value; r[u] = u } } catch (e) { o = !0, a = e } finally { try { !n && f.return && f.return() } finally { if (o) throw a } } return r }, format2Sheet: function (e) { var r = Object.keys(e[0]), n = []; return e.map(function (e, n) { return r.map(function (r, o) { return Object.assign({}, { v: e[r], position: (o > 25 ? t.getCharCol(o) : String.fromCharCode(65 + o)) + (n + 1) }) }) }).reduce(function (e, r) { return e.concat(r) }).forEach(function (e, r) { return n[e.position] = { v: e.v } }), n }, format2WB: function (e) { var r = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "mySheet", t = arguments[2], n = Object.keys(e); return t || (t = new Object, t.Sheets = {}, t.SheetNames = []), t.SheetNames.push(r), t.Sheets[r] = Object.assign({}, e, { "!ref": n[0] + ":" + n[n.length - 1] }), t }, format2Blob: function (e, r) { return new Blob([t.Binary.s2ab(XLSX.write(e, { bookType: void 0 == r ? "xlsx" : r, bookSST: !1, type: "binary" }))], { type: "" }) }, getCharCol: function (e) { for (var r = "", t = 0; e > 0;)t = e % 26 + 1, r = String.fromCharCode(t + 64) + r, e = (e - t) / 26; return r } }; return t; })();
+    </script>
+    <script>
+        // <!-- https://gitee.com/baojuhua/lutils/blob/master/min/saveAs.min.js --> 
+        function saveAs(e, t) { if (!("string" != typeof e || e.length <= 0)) { var n = document.createElement("a"); n.id = "download-" + Date.parse(new Date), n.href = e, n.download = t || "", n.style = "opacity: 0;height: 1px;width: 1px;overflow: hidden;position:fixed;top: -1;left: -1;z-index: -1;", document.body.appendChild(n), document.getElementById(n.id).click(), document.body.removeChild(document.getElementById(n.id)) } }
+    </script>
+    <script type="text/html" id="couponInfo">
+		<div class="row">
+            <div class="col-md-6">
+                <h5>优惠券领取情况</h5>
+                <div class="form-group">
+                    <input class="form-control" type="text" name="tel" placeholder="联系方式筛选"/>
+                </div>
+                <table id="getCouponData"></table>
+            </div>
+			<div class="col-md-6">
+				<h5>优惠券使用情况</h5>
+                <table id="useCouponData"></table>
+			</div>
+		</div>
+    </script>
+    <script type="text/javascript">
+        var app = {
+            data: {
+                table: $("#table-coupon"),
+                hasActArray : [],
+                couponData: []
+            },
+            methods: {
+                initTable: function () {
+                    // var authority_data = authoritys.useAuthority();
+					// if(!authority_data){
+					// 	toastr.error("权限不足，不允许访问...")
+					// 	return;
+					// }
+                    app.data.table.bootstrapTable({
+                        showExport: true,  //是否显示导出按钮  
+                        pagination : true , 
+						cache: false,
+						sortable: false,
+						sidePagination: "server",
+						templateView : false,
+						pageNumber : 1, 
+						pageSize : 30, 
+						pageList : [30 , 60 , 100],
+						toolbarAlign : 'left',
+						clickToSelect: true,
+						queryParamsType : 'page' ,
+                        queryParams: function (params) {    
+                            params.size = params.pageSize;
+                            params.page = parseInt(params.pageNumber) - 1;
+                            params.couponType = $('select[name="couponsList"]').val()
+                            return params;
+                        },
+                        url: utils.prePath() + '/api/system/activity/list',
+                        totalField: 'body.totalElements',
+                        dataField: 'body.content',
+                        columns: app.methods.optionByAuthority(),
+                        onLoadSuccess: function (data) {
+                            app.data.couponData = data.body.content;
+                            tableUi.initBootstrapTable();
+                            authoritys.useAuthority();
+                        },
+						onLoadError: function(result){
+							if(result == 403){
+								toastr.error("不允许访问")
+							}else{
+								toastr.error('系统异常,请稍候重试或联系开发人员...');
+							}
+                        }
+                    });
+                },
+                optionByAuthority: function () {
+                    var option = [{
+                        field: 'id',
+                        title: 'ID',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return value;
+                        }
+                    },{
+                        field: 'title',
+                        title: '活动标题',
+                        align: 'center',
+                    },{
+                        field: 'details',
+                        title: '活动详情',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            if(value != undefined){
+                                let details = ''
+                                value.map(item => {
+                                    details += `<p>满${item.priceCritical}减${item.priceLessen}</p>`
+                                })
+                                return details
+                            }else{
+                                return '暂无活动'
+                            }
+                        }
+                    },{
+                        title: '开始时间',
+                        field: 'startTime',
+                        formatter: function (value, row, index, field) {
+                            return tools.formatterFunction.time(value);
+                        }
+                    },{
+                        field: 'endTime',
+                        title: '结束时间',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return tools.formatterFunction.time(value);
+                        }
+                    },{
+                        field: 'remark',
+                        title: '备注',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return value
+                        }
+                    }, {
+                        title: '操作',
+                        align: 'center',
+                        width: 200,
+                        minWidth: 200,
+                        formatter: function (value, row, index, field) {
+                            let status = ''
+                            row.status == 0 ? status = `<a class="btn btn-success btn-xs" onclick="app.methods.startAct(${row.id}, 1)">启用</a>` : status = `<a class="btn btn-danger btn-xs"  onclick="app.methods.startAct(${row.id}, 0)">停用</a>`
+                            return `<a class="btn btn-primary btn-xs" onclick="app.methods.addCoupon(${index})">编辑</a>`+ status
+                        }
+                    }];
+                    return option;
+                }, 
+                // 启用/停用活动
+                startAct: function(id, type){
+                    let data = {
+                        id: id,
+                        status: type
+                    }
+                    $.ajax({
+                        type : "post",
+                        url : utils.prePath()+"/api/system/activity/update/status",
+                        data: JSON.stringify(data),
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                app.data.table.bootstrapTable('refresh');
+                            }else{
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    });
+                },
+                // 活动回显
+                actShow: function(hasActArray){
+                    console.log(hasActArray)
+                    let newHtml = '';
+                    if(hasActArray && hasActArray.length>0){
+                        hasActArray.map((item, index) => {
+                            newHtml += `<p>满 ${item.priceCritical} 减 ${item.priceLessen}<button type="button" class="btn btn-danger btn-xs" onclick="app.methods.deleteActCounp(${index})">删除</button></p>`
+                        })
+                    }
+                    $('#hasAdd').html(newHtml)
+                },
+                 // 添加满减活动方法
+                 addActCounp: function(){
+                    var _modal = $(".dialog-create-coupon");
+                    let details = app.data.hasActArray || []
+                    if(_modal.find("input[name='priceCritical']").val() != "" && _modal.find("input[name='priceLessen']").val() != ""){
+                        app.data.hasActArray.push({
+                            priceCritical: _modal.find("input[name='priceCritical']").val(),
+                            priceLessen: _modal.find("input[name='priceLessen']").val()
+                        })
+                        _modal.find("input[name='priceCritical']").val("")
+                        _modal.find("input[name='priceLessen']").val("")
+                        app.methods.actShow([...new Set(app.data.hasActArray)])
+                    }else{
+                        toastr.error('请输入满减活动金额')
+                    }
+                    
+                },
+                // 删除满减活动方法
+                deleteActCounp: function(index){
+                    console.log(app.data.hasActArray)
+                    app.data.hasActArray.splice(index, 1)
+                    app.methods.actShow([...new Set(app.data.hasActArray)])
+                },
+                addCoupon:function(index){
+                    var _modal = $(".dialog-create-coupon");
+                    _modal.modal({
+                        backdrop: 'static',
+                        keyboard: false,
+                        show: false
+                    });
+                    console.log(index)
+                    app.data.hasActArray = []
+                    if(index != undefined){
+                        _modal.find("input[name='couponName']").val(app.data.couponData[index].title)
+                        if(app.data.couponData[index].details != undefined){
+                            app.methods.actShow(app.data.couponData[index].details)
+                            app.data.couponData[index].details.map(item => {
+                                app.data.hasActArray.push({
+                                    priceCritical: item.priceCritical,
+                                    priceLessen: item.priceLessen
+                                })
+                            })
+                        }
+                        tools.rangeTime('input[name="timeLimit"]',true);
+                        _modal.find("input[name='timeLimit']").val(tools.formatterFunction.time(app.data.couponData[index].startTime) + ' - ' +  tools.formatterFunction.time(app.data.couponData[index].endTime))
+                        
+                        _modal.find("input[name='comments']").val(app.data.couponData[index].remark)
+                        _modal.modal("show");
+                    }else{
+                        //modal初始化
+                        tools.rangeTime('input[name="timeLimit"]',true);
+                        _modal.find("input[type='text']").val('');
+                        _modal.find("input[type='number']").val('');
+                        app.methods.actShow([])
+                        _modal.modal("show");
+                    }
+                    
+                    // tools.renderSelect.categoryId('select[name="categoryId"]');
+                    // tools.renderSelect.aggregaTogether('select[name="aggregaTogether"]', $('select.form-control[name="scopeId"]').val())
+                    
+
+                    _modal.find('button[commit]').off('click').on('click', function () {
+                        var formData = $('.dialog-create-coupon form').serializeJson(); 
+                        if(!formData.couponName){
+                            toastr.error('请输入活动名称');
+                            return false;
+                        }
+                        if(!formData.timeLimit){
+                            toastr.error('请选择使用期限');
+                            return false;
+                        }
+                        if(app.data.hasActArray.length <= 0){
+                            toastr.error('请添加满减金额');
+                            return false;
+                        }
+                        var data = {
+                            id: (index != undefined ? app.data.couponData[index].id : ''),
+                            title: formData.couponName,
+                            startTime: moment(formData.timeLimit.split(' - ')[0]).unix()*1000,
+                            endTime: moment(formData.timeLimit.split(' - ')[1]).unix()*1000,
+                            remark: formData.comments,
+                            details: [...new Set(app.data.hasActArray)]
+                        };
+
+                        $.ajax({
+                            type : "post",
+                            url : utils.prePath()+  (index != undefined ? "/api/system/activity/update" : "/api/system/activity/insert"),
+                            data: JSON.stringify(data),
+                            success : function(result){
+                                if(result.statusCode == 'OK'){
+                                    _modal.modal("hide");
+                                    app.data.table.bootstrapTable('refresh');
+                                }else{
+                                    toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                                }
+                            }
+                        });
+                    })
+                },
+                initBtn: function(){
+                    var user = utils.cookie.getCookie('username');
+                    if(user == 'admin' || user == 'dev'){
+                        $('.sendMesBtn').show();
+                    }else{
+                        $('.sendMesBtn').remove();
+                    }
+                },
+                initSelect: function(){
+                    tools.renderSelect.couponsList('select[name="couponsList"]')
+                    $.ajax({
+                        type : "GET",
+                        url : utils.prePath()+"/api/admin/scope/list",
+                        async : false,
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                var data = [];
+                                result.body.content.map(function (e) {
+                                    data.push({
+                                        id: e.id,
+                                        text: e.name,
+                                    })
+                                })
+                                $('select[name="scopeId"]').select2({
+                                    data: data,
+                                    placeholder: "选择来源商城",
+                                    width:'100%'
+                                });
+                                app.data.scopeData = result.body.content;
+                            }else{
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    })
+                }
+            },
+            init: function () {
+                app.methods.initBtn();
+                app.methods.initSelect();
+                app.methods.initTable();
+                $('.newCateLevel').on('click', function(e){
+					$('.levelDetail').toggle()
+					e.stopPropagation();
+				})
+            }
+        }
+
+        $(function () {
+            app.init();
+        });
+    </script>
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>价格查询</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/bootstrap-select/css/bootstrap-select.min.css" />
+		<link rel="stylesheet" href="../dists/easyui/themes/bootstrap/easyui.css">
+        <link rel="stylesheet" href="../dists/daterangepicker/daterangepicker.css" />
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<!-- <link rel="stylesheet" href="../dists/hint/hint.css"/> -->
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+        <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+        <style>
+			.productInfoAdBox li span:nth-child(10){display: none;}
+			#analysisMes {line-height: 18px;font-size: 14px;padding: 5px 6px;}
+			#toolbar.btn-group .span-input-time{
+				max-width: 150px;
+				width: auto;
+				height: 34px;
+				line-height: 34px;
+				margin-left: 10px;
+			}
+			.levelName{
+				font-size: 14px;margin-top: 6px;float: left;margin-left: 14px;
+			}
+			.levelDetail{
+				width:230px;height: 300px;
+				overflow: auto;position: absolute;top: 35px;left: 0;
+				background: #fff;z-index: 1;border: 1px solid #ddd;
+			}
+			.newtree {
+				min-height:20px;
+				margin-bottom:20px;
+			}
+			.newtree li {
+				list-style-type:none;
+				margin:0;
+				padding:10px 5px 0 5px;
+				position:relative
+			}
+			.newtree li::before, .newtree li::after {
+				content:'';
+				left:-20px;
+				position:absolute;
+				right:auto
+			}
+			[class^="icon-"], [class*=" icon-"]{
+				display: inline-block;
+				width: 14px;
+				height: 14px;
+				margin-right: .3em;
+				line-height: 14px;
+				vertical-align: text-top;
+				background-image: url(../img/glyphicons-halflings.png);
+				background-position: 0 -96px;
+				background-repeat: no-repeat;
+			}
+			.newtree li::before {
+				border-left:1px solid #999;
+				bottom:50px;
+				height:100%;
+				top:0;
+				width:1px
+			}
+			.newtree li::after {
+				border-top:1px solid #999;
+				height:20px;
+				top:25px;
+				width:25px
+			}
+			.newtree li span {
+				-moz-border-radius:5px;
+				-webkit-border-radius:5px;
+				border:1px solid #999;
+				border-radius:5px;
+				display:inline-block;
+				padding:3px 8px;
+				text-decoration:none;
+				background:#fff;color:#333;
+			}
+			.newtree li span:hover{
+				background:#f2f2f2;
+			}
+			.newtree li.parent_li>span {
+				cursor:pointer
+			}
+			.newtree>ul>li::before, .newtree>ul>li::after {
+				border:0
+			}
+			.newtree li.parent_li>span:hover, .newtree li.parent_li>span:hover+ul li span {
+				background:#eee;
+				border:1px solid #94a0b4;
+				color:#000
+			}
+			.icon-folder-open{
+				width: 16px;
+    			background-position: -408px -120px;
+			}
+			.icon-plus-sign{
+				background-position: 0 -96px;
+			}
+			.icon-minus-sign{
+				/* background-position: -24px -96px; */
+			}
+			.icon-time{
+				background-position: -192px -120px;
+			}
+			.changeRate{
+				font-weight:bold;
+				text-decoration: underline;
+				cursor:pointer;
+			}
+			#exinputDiv span{
+				display:inline-block;
+				text-align: right;
+			}
+			.exinputDivIn{
+				margin-top:15px;
+			}
+			#exinputDiv span.hasChooseFile{
+				display:block;
+				margin-top:5px;
+				background:#eee;padding:5px 10px;
+				text-align: center;
+			}
+			#toolbar.btn-group .newVersionInfo{
+				position:absolute;
+				right:0;
+				width:auto;
+				max-width: inherit;
+				line-height: 34px;
+			}
+			.layui-layer{
+				background:#fff !important;
+			}
+			.historyTable .fixed-table-container{
+				height:530px;
+			}
+        </style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="panel panel-headline">
+				<div class="panel-heading">
+					<div class="left">
+						<h3 class="panel-title">价格设置</h3>
+						<div class="toolBox btn-group">
+                            <button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i>&nbsp; 搜索 </button>
+                            <button class="btn btn-success" id="exinputPrice"><i class="fa fa-upload"></i>&nbsp;&nbsp;导入</button>
+                            <button class="btn btn-primary" onclick="app.methods.exportPrice();"><i class="fa fa-download"></i>&nbsp;&nbsp;导出</button>
+							<span id="analysisMes"></span>
+						</div>	
+					</div>	
+					<div class="toolBox btn-group right">
+						<button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+					</div>
+				</div>
+				<div class="panel-body">
+					<div id="toolbar" class="btn-group">
+						<select name="scopeId" class="selectpicker scopeIdOut" data-live-search="true">
+							<option value="8">阿噗特卖</option>
+							<option value="18">折多多</option>
+						</select>
+						<select class="selectpicker" data-live-search="true" name="versionId"></select>
+						<!-- <input class="classify" name="categoryId" style="width:100%;"> -->
+						<button class="btn btn-primary" onclick="app.methods.tableSearch()"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+						<button class="btn btn-success" onclick="app.methods.searchRecord()"><i class="fa fa-search"></i>&nbsp;&nbsp;查看历史记录</button>
+						<!-- 显示历史版本创建时间以及创建人 -->
+						<div class="newVersionInfo"></div>
+					</div>
+					<table id="table-main"></table>
+				</div>
+			</div>
+			<div id="exinputDiv">
+				<div class="exinputDivIn">
+					<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;商城：</span>
+					<select name="scopeId" class="selectpicker scopeIdIn" data-live-search="true">
+						<option value="8">阿噗特卖</option>
+						<option value="18">折多多</option>
+					</select>
+				</div>
+				<div class="exinputDivIn">
+					<span>创建新版本：</span>
+					<select name="createNewVersion" class="selectpicker createNewVersion" data-live-search="true">
+						<option value="false">否</option>
+						<option value="true">是</option>
+					</select>
+				</div>
+				<div class="exinputDivIn">
+					<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上传文件：</span>
+					<button class="btn btn-success" id="uploadPrice"><i class="fa fa-upload"></i>&nbsp;&nbsp;点击上传</button>
+					<div id="file-list"></div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+    <script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-select/js/bootstrap-select.min.js" ></script>    
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../dists/daterangepicker/daterangepicker.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/plupload.full.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/i18n/zh_CN.js"></script>
+	<script type="text/javascript" src="../js/plupload-upload.js"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+	<script type="text/javascript" src="../dists/easyui/jquery.easyui.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../dists/easyui/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20201223"></script>
+	<script type="text/javascript">
+		var app = {
+			data : {
+				table : $("#table-main"),
+				priceData: []
+			},
+			methods : {
+				initTable : function(){
+					// var authority_data = authoritys.useAuthority();
+					// if(!authority_data){
+					// 	toastr.error("权限不足，不允许访问...")
+					// 	return;
+					// }
+					app.data.table.bootstrapTable(Object.assign(tableUi.data.tableOption_page, {
+						sortable: true,
+						url: utils.prePath() + '/api/admin/product/price/rate/list',
+						queryParams : function(params){
+                            params.size = params.pageSize;
+                            params.page = parseInt(params.pageNumber)-1;
+							params.sortName && params.sortOrder && (params.sort = params.sortName + ',' + params.sortOrder);
+							
+							params.queryCategoryLevel = $('#levelName').attr('data-level')
+							params.queryCategoryId = $('#levelName').attr('data-id')
+							
+							delete params['pageSize'];
+                            delete params['pageNumber'];
+                            delete params['sortName'];
+                            delete params['sortOrder'];
+                            return Object.assign(params, tools.getParams('#toolbar'));
+                        },
+						columns: app.methods.optionByAuthority($('select[name="scopeId"]').val()),
+						onLoadSuccess : function(data){
+							tableUi.initBootstrapTable();
+							authoritys.useAuthority();
+							app.data.priceData = data.body.content
+							app.methods.tableEvents()
+					    },
+					}));
+				},
+				// 导出
+				exportPrice: function(){
+                    tools.exportByFrom('/api/admin/product/price/rate/export',tools.getParams('#toolbar'));
+				},
+				// 导入
+				exinputPrice: function(){
+					// layer.confirm( $('#exinputDiv').html(), {
+					// 	title:'导入文件',
+					// 	area:['400px','300px'],
+					// 	btn: ['确定','取消'] //按钮
+					// 	}, function(){
+					// 		layer.msg('的确很重要', {icon: 1});
+					// 	}, function(){
+						
+					// });
+					layer.open({
+						type: 1,
+						title:'导入文件',
+						skin: 'layui-layer-rim', //加上边框
+						area: ['400px','300px'], //宽高
+						btn: ['确定','取消'],
+						content: $('#exinputDiv'),
+						success: function() {
+							
+						},
+						yes:function(){
+							app.methods.initPushFile.start(); //开始上传
+						}
+					})
+				},
+				initPushFile: function(){
+					let uploader = new plupload.Uploader({
+						runtimes: 'html5,html4',
+						browse_button: 'uploadPrice',
+						url: utils.prePath() + "/api/admin/product/price/rate/import",
+						file_data_name: 'file',
+						multi_selection:false,
+						filters: {
+							max_file_size: '10240kb',
+							mime_types: [{ title: "Excel files", extensions: "xls" }],
+						},
+						multipart_params: {
+							
+						},
+						UploadComplete: function(uploader,files){
+							// console.log(1)
+						}
+						// init: {
+						// 	FilesAdded: function (up, files) {
+						// 		layer.load();
+						// 		up.start();
+						// 		toastr.info('正在上传...');
+						// 	},
+						// 	FileUploaded: function(uploader,file,responseObject){
+                        //         toastr.success('导入成功');
+						// 		layer.closeAll('loading');
+						// 	},
+						// 	Error: function (up, err) {
+						// 		toastr.error(JSON.parse(err.response).body.message);
+						// 		layer.closeAll('loading');								
+						// 	}
+						// }
+					})
+					uploader.init();  //初始化
+					//绑定文件添加进队列事件
+					uploader.bind('FilesAdded',function(uploader,files){
+						for(var i = 0, len = files.length; i<len; i++){
+							let file_name = files[i].name; //文件名
+							//构造html来更新UI
+							let html = '<span class="hasChooseFile" id="file-' + files[i].id +'">已选取文件：' + file_name + '</span>';
+							$('#file-list').html(html);
+						}
+					});
+					uploader.bind('FileUploaded',function(uploader,file, responseObject){
+						if(responseObject.status == 200){
+							toastr.success('上传成功');
+							$('#file-list').html('');
+						}else{
+							toastr.success('上传失败');
+						}
+						layer.closeAll();
+						setTimeout(() => {
+							window.location.reload();
+							// app.data.table.bootstrapTable('refresh');
+						},500)
+					});
+					uploader.bind('Error',function(up, err){
+						toastr.error('上传失败，' + JSON.parse(err.response).body.message);
+						$('#file-list').html('');
+						layer.closeAll();
+						// app.data.table.bootstrapTable('refresh');
+						// window.location.reload();
+					});
+					
+					$('#exinputPrice').off().on('click', function(){
+						layer.open({
+							type: 1,
+							title:'导入文件',
+							skin: 'layui-layer-rim', //加上边框
+							area: ['400px','350px'], //宽高
+							btn: ['确定','取消'],
+							content: $('#exinputDiv'),
+							success: function() {
+								
+							},
+							yes:function(){
+								uploader.setOption("multipart_params", {
+									scopeId: $('select.scopeIdIn').val(),
+									createNewVersion: $('select.createNewVersion').val(),
+									access_token: utils.cookie.getCookie('accessToken')
+								})
+								// console.log($('select.scopeIdIn').val())
+								// console.log($('select.createNewVersion').val())
+								uploader.start(); //开始上传
+								// uploader.trigger('UploadProgress')
+							}
+						})
+					})
+				},
+				tableSearch: function(){
+					// let nowScopeId = $('select[name="scopeId"]').val()
+					// app.data.table.bootstrapTable('refresh');
+					app.data.table.bootstrapTable('destroy');
+					// let oTable = new TableInit();
+					// oTable.Init('#table-main')
+					// app.data.table.bootstrapTable('')
+					app.methods.initTable();
+				},
+				tableEvents: function (){
+					// 加载成功后表格数据处理事件
+					$('.changeRate').off().on('click', function(){
+						let orderIndex = $(this).data('index');
+						layer.prompt({
+							formType: 0,
+							value: app.data.priceData[orderIndex].rate,
+							title: '修改倍率',
+						}, function(value){
+							let valueType = /^[0-9.]*$/
+							if(!value || !valueType.test(value)){
+								toastr.warning('请输入正确的倍率')
+								return;
+							}
+							if(value < 0 || value >= 10000){
+								toastr.warning('请输入0-10000之间的倍率')
+								return;
+							}
+							$.ajax({
+								type: "POST",
+								url: utils.prePath() + "/api/admin/product/price/rate/update",
+								data: JSON.stringify({
+									"id": app.data.priceData[orderIndex].id,
+									"rate": value
+								}),
+								success: function (result) {
+									if (result.statusCode == 'OK') {
+										toastr.success('倍率修改成功...');
+										app.data.table.bootstrapTable('refresh');
+										layer.closeAll();
+									} else {
+										toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+									}
+								}
+							});
+						});
+					})
+				},
+				searchRecord: function(){
+					layer.open({
+						type: 1,
+						title: '历史记录',
+						shadeClose: true,
+						shade: false,
+						maxmin: true, //开启最大化最小化按钮
+						area: ['1200px', '650px'],
+						content: '<div class="historyTable"><table id="table-params"></table></div>'
+					});
+					
+					$('#table-params').bootstrapTable({
+						pagination : true , 
+						cache: false,
+						sidePagination: "server",
+						templateView : false,
+						pageNumber : 1, 
+						pageSize : 13, 
+						pageList : [13 , 26 , 39, 52],
+						toolbarAlign : 'left',
+						queryParamsType : 'page' ,
+						queryParams : function(params){
+							Object.assign(params , {
+								versionId: $('select[name="versionId"]').find("option:selected").attr('data-id') 
+							});
+							params.size = params.pageSize;
+							params.page = parseInt(params.pageNumber)-1;
+							return params;
+						},
+						url: utils.prePath() + '/api/admin/product/price/rate/log',
+						totalField: 'body.totalElements',
+						dataField: 'body.content',
+						columns: [{
+							field: 'minPurchasePrice',title: '最小采购价(￥)',align: 'center'
+						},{
+							field: 'maxPurchasePrice',title: '最大采购价(￥)',align: 'center'
+						},{
+							field: 'originalRate',title: '原倍率',align: 'center'
+						},{
+							field: 'newRate',title: '新倍率',align: 'center'
+						},{
+							field: 'version',title: '版本号',align: 'center'
+						},{
+							field: 'updatedAt',title: '更新时间',align: 'center',
+							formatter: function(value, row, index){
+								return moment(value).format('YYYY-MM-DD HH:mm:ss')
+							}
+						},{
+							field: 'updatedBy',title: '修改人',align: 'center'
+						}],
+						onLoadSuccess : function(data){
+							
+						}
+					});
+				},
+				exportDown:function(){
+					let newParam = Object.assign({
+						queryCategoryLevel:  $('#levelName').attr('data-level'),
+						queryCategoryId : $('#levelName').attr('data-id')
+					}, tools.getParams('#toolbar'))
+					tools.exportByFrom('/api/admin/erp/analysis/order/category/export',newParam);
+				},
+                optionByAuthority: function (scopeId) {
+					var option = [];
+					if(scopeId == 8){
+						option = [{
+							field: 'minPurchasePrice',title: '采购价(P)范围(￥)',align: 'center',
+							formatter: function(value, row, index, field) {
+								if(row.maxPurchasePrice){
+									return  row.minPurchasePrice + ' < P ≤ ' + row.maxPurchasePrice
+								}else{
+									return ' P > ' + row.minPurchasePrice
+								}
+							}
+						}, {
+							field: 'minTWDPurchasePrice',title: '采购价(P)范围(NT$)',align: 'center',
+							formatter: function(value, row, index, field) {
+								if(row.maxTWDPurchasePrice){
+									return  row.minTWDPurchasePrice + ' < P ≤ ' + row.maxTWDPurchasePrice
+								}else{
+									return ' P > ' + row.minTWDPurchasePrice
+								}
+							}
+						}, {
+							field: 'rate',title: '倍率',align: 'center',
+							formatter: function(value, row, index, field) {
+								return '<span data-index="'+ index +'" class="changeRate">'+ value +'</span>'
+							}
+						}, {
+							field: 'minSalePrice',title: '出清价格P1(NT$)',align: 'center',
+							formatter: function(value, row, index, field) {
+								if(row.maxSalePrice){
+									return  row.minSalePrice + ' < P1 ≤ ' + row.maxSalePrice
+								}else{
+									return ' P1 > ' + row.minSalePrice
+								}
+							}
+						}, {
+							field: 'minPurchaseRatio',title: '采购占比区间',align: 'center',
+							formatter: function(value, row, index, field) {
+								if(row.maxPurchaseRatio){
+									return  row.minPurchaseRatio + '% < P ≤ ' + row.maxPurchaseRatio + '%'
+								}else{
+									return  ' P > ' + row.minPurchaseRatio  + '%'
+								}
+							}
+						}];
+					}else if(scopeId == 18){
+						option = [
+							{
+								field: 'minPurchasePrice',title: '采购价(P)范围(￥)',align: 'center',
+								formatter: function(value, row, index, field) {
+									if(row.maxPurchasePrice){
+										return  row.minPurchasePrice + ' < P ≤ ' + row.maxPurchasePrice
+									}else{
+										return ' P > ' + row.minPurchasePrice
+									}
+								}
+							},{
+								field: 'minTWDPurchasePrice',title: '采购价(P)范围(NT$)',align: 'center',
+								formatter: function(value, row, index, field) {
+									if(row.maxTWDPurchasePrice){
+										return  row.minTWDPurchasePrice + ' < P ≤ ' + row.maxTWDPurchasePrice
+									}else{
+										return  ' P > ' + row.minTWDPurchasePrice
+									}
+								}
+							}, {
+								field: 'rate',title: '倍率',align: 'center',
+								formatter: function(value, row, index, field) {
+									return '<span data-index="'+ index +'" class="changeRate">'+ value +'</span>'
+								}
+							}, {
+								field: 'minSalePrice',title: '多件划线价格P1(NT$)',align: 'center',
+								formatter: function(value, row, index, field) {
+									if(row.maxSalePrice){
+										return  row.minSalePrice + ' < P1 ≤ ' + row.maxSalePrice
+									}else{
+										return  ' P1 > ' + row.minSalePrice
+									}
+								}
+							}
+						]
+					}
+                    return option;
+				},
+				initSelect : function(){
+					tools.renderSelect.priceSetting('select[name="versionId"]', 8, '.newVersionInfo'); // 默认加载阿噗特卖的
+					tools.rangeTime('input[name="orderTimes"]');
+					tools.rangeTime('input[name="shelftTimes"]');
+				}
+			},
+			init : function(){ 
+				app.methods.initPushFile()
+				app.methods.initSelect();
+				app.methods.initTable();
+				tools.toolbarEnterEvent(function(){app.data.table.bootstrapTable('refresh')});
+				// console.log($('select[name="version"]').find("option:selected").attr('data-name'))
+				$('.newVersionInfo').html('版本创建人：'+　$('select[name="versionId"]').find("option:selected").attr('data-name')　+ '&nbsp;&nbsp;&nbsp;&nbsp;创建时间：' + $('select[name="versionId"]').find("option:selected").attr('data-time'))
+				$('select.scopeIdOut[name="scopeId"]').change(function(){
+					let thisValue = $(this).val()
+					tools.renderSelect.priceSetting('select[name="versionId"]', thisValue);
+					app.methods.tableSearch()
+					$('.newVersionInfo').html('版本创建人：'+　$('select[name="versionId"]').find("option:selected").attr('data-name')　+ '&nbsp;&nbsp;&nbsp;&nbsp;创建时间：' + $('select[name="versionId"]').find("option:selected").attr('data-time'))
+				})
+				$('select[name="versionId"]').change(function(){
+					let thisTime = $(this).find("option:selected").attr('data-time'),thisName = $(this).find("option:selected").attr('data-name') 
+					// alert(thisTime)
+					// alert(thisName)
+					$('.newVersionInfo').html('版本创建人：'+　thisName　+ '&nbsp;&nbsp;&nbsp;&nbsp;创建时间：' + thisTime)
+				})
+			}
+		}
+		$(function(){
+			app.init();
+			$(document).click(function () {
+				$(".levelDetail").hide();
+			});
+		});
+	</script>
+</html>

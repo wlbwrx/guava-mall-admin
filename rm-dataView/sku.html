@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Home</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<link rel="stylesheet" href="../dists/hint/hint.css"/>
+        <link rel="stylesheet" href="../dists/select2/dist/css/select2.css" />
+        <link rel="stylesheet" type="text/css" href="../dists/daterangepicker/daterangepicker.css" />
+        <link href="https://cdn.bootcss.com/flatpickr/4.4.6/flatpickr.min.css" rel="stylesheet">
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+            #toolbar.btn-group>.form-inline input{width: auto!important;}
+            @media screen and (max-width: 768px) {
+                #toolbar.btn-group > .form-inline input{width: 100% !important;}
+            }
+            .orderDate,.proDate{border: 1px solid rgb(214, 214, 214);font-size: 0;line-height: 32px;}
+            .orderDate input,.proDate input{border: none;height: 32px;}
+            .orderDate span,.proDate span{font-size: 14px;vertical-align: middle;padding-left: 6px;}
+		</style>
+	</head>
+	<body>
+        <div class="container-fluid">
+            <div class="panel panel-headline">
+                <div class="panel-heading">
+                    <h3 class="panel-title">sku数据分析</h3>
+                    <div class="toolBox btn-group">
+                        <button class="btn btn-warning btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i>&nbsp; 搜索 </button>
+                        <button class="btn btn-primary btn-sm" onclick="app.methods.downloadExcel();"><i class="fa fa-download"></i>&nbsp;&nbsp;导出分析表</button>
+                        <button class="btn btn-primary btn-sm" onclick="window.location.reload();"><i class="fa fa-refresh"></i>&nbsp;刷新页面</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div id="toolbar" class="btn-group">
+                        <input type="text" class="form-control" name="affiliate" placeholder="输入投放人姓名" style="width: 150px;">
+                        <select type="text" class="form-control" name="scopeId" style="min-width: 150px;"></select>
+                        <input type="text" class="form-control" name="datetimes" placeholder="订单创建时间" style="min-width: 234px;" />
+                        <input type="text" class="form-control" name="datetimes1" placeholder="产品创建时间" style="min-width: 234px;" />
+                        <input type="text" class="form-control" name="productId" placeholder="输入产品ID" style="width: 150px;">
+                        <input type="text" class="form-control" name="productTitle" placeholder="输入产品标题" style="width: 150px;">
+                        <input type="text" class="form-control" name="productSkuBarcode" placeholder="输入产品编码" style="width: 150px;">
+                        <select type="text" class="form-control" name="productStatus" style="min-width: 150px;">
+                            <option value="全部">全部</option>
+                            <option value="-1">创建失败</option>
+                            <option value="0">创建中</option>
+                            <option value="1">已创建</option>
+                            <option value="10">上架</option>
+                            <option value="20">下架</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+                    </div>
+                    <table id="table-products"></table>
+                </div>
+            </div>
+        </div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../js/bootstrap-table-template.js"></script>
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+    <script type="text/javascript" src="../dists/select2/dist/js/select2.full.min.js"></script>
+    <script type="text/javascript" src="../dists/plupload-2.3.6/js/plupload.full.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/i18n/zh_CN.js"></script>
+    <script type="text/javascript" src="../js/plupload-upload.js"></script>
+    <script type="text/javascript" src="../dists/flatpickr/flatpickr.js"></script>
+    <script type="text/javascript" src="../dists/daterangepicker/daterangepicker.min.js"></script>
+    <script src="http://oss.sheetjs.com/js-xlsx/xlsx.core.min.js"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+    <script>
+        // <!-- https://gitee.com/baojuhua/lutils/blob/master/min/xlsx.utils.min.js -->
+        var xlsxUtils = (function () { var t = { Binary: { fixdata: function (e) { for (var r = "", t = 0, n = 10240; t < e.byteLength / n; ++t)r += String.fromCharCode.apply(null, new Uint8Array(e.slice(t * n, t * n + n))); return r += String.fromCharCode.apply(null, new Uint8Array(e.slice(t * n))) }, s2ab: function (e) { for (var r = new ArrayBuffer(e.length), t = new Uint8Array(r), n = 0; n != e.length; ++n)t[n] = 255 & e.charCodeAt(n); return r } }, _wb: null, _rABS: !1, import: function (e, r) { this.wb = null; var n = new FileReader; n.onload = function (e) { var n = e.target.result; t._wb = t._rABS ? XLSX.read(btoa(t.Binary.fixdata(n)), { type: "base64" }) : XLSX.read(n, { type: "binary" }), "function" == typeof r && r(t._wb) }, t._rABS ? n.readAsArrayBuffer(e) : n.readAsBinaryString(e) }, getSheetByName: function (e) { return XLSX.utils.sheet_to_json(t._wb.Sheets[e]) }, getSheetByIndex: function () { var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0; return t.getSheetByName(t._wb.SheetNames[e]) }, export: function (e, r) { var n = null; for (var o in e) { var a = t.format2Sheet(e[o]); n = t.format2WB(a, o, n) } return t.format2Blob(n, r) }, readDataHead: function (e) { var r = {}, t = Array.isArray(e) ? Object.keys(e[0]) : e, n = !0, o = !1, a = void 0; try { for (var i, f = t[Symbol.iterator](); !(n = (i = f.next()).done); n = !0) { var u = i.value; r[u] = u } } catch (e) { o = !0, a = e } finally { try { !n && f.return && f.return() } finally { if (o) throw a } } return r }, format2Sheet: function (e) { var r = Object.keys(e[0]), n = []; return e.map(function (e, n) { return r.map(function (r, o) { return Object.assign({}, { v: e[r], position: (o > 25 ? t.getCharCol(o) : String.fromCharCode(65 + o)) + (n + 1) }) }) }).reduce(function (e, r) { return e.concat(r) }).forEach(function (e, r) { return n[e.position] = { v: e.v } }), n }, format2WB: function (e) { var r = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "mySheet", t = arguments[2], n = Object.keys(e); return t || (t = new Object, t.Sheets = {}, t.SheetNames = []), t.SheetNames.push(r), t.Sheets[r] = Object.assign({}, e, { "!ref": n[0] + ":" + n[n.length - 1] }), t }, format2Blob: function (e, r) { return new Blob([t.Binary.s2ab(XLSX.write(e, { bookType: void 0 == r ? "xlsx" : r, bookSST: !1, type: "binary" }))], { type: "" }) }, getCharCol: function (e) { for (var r = "", t = 0; e > 0;)t = e % 26 + 1, r = String.fromCharCode(t + 64) + r, e = (e - t) / 26; return r } }; return t; })();
+    </script>
+    <script>
+        // <!-- https://gitee.com/baojuhua/lutils/blob/master/min/saveAs.min.js --> 
+        function saveAs(e, t) { if (!("string" != typeof e || e.length <= 0)) { var n = document.createElement("a"); n.id = "download-" + Date.parse(new Date), n.href = e, n.download = t || "", n.style = "opacity: 0;height: 1px;width: 1px;overflow: hidden;position:fixed;top: -1;left: -1;z-index: -1;", document.body.appendChild(n), document.getElementById(n.id).click(), document.body.removeChild(document.getElementById(n.id)) } }
+    </script>
+
+    <script type="text/javascript">
+        var app = {
+            data: {
+                table: $("#table-products"),
+            },
+            methods: {
+                showSearchView: function () {
+                    $('#toolbar .form-inline').toggle()
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-down')
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-up')
+                    app.methods.initBootstrapTableStyle();
+                },
+                initBootstrapTableStyle: function(){
+                    $('.panel .panel-body .bootstrap-table').css({
+                        'height':'calc(100% - '+$('#toolbar').outerHeight(true)+'px)'
+                    })
+                    $('.panel .panel-body .bootstrap-table .fixed-table-container').css({
+                        'height':'calc(100% - '+$('.panel .panel-body .bootstrap-table .fixed-table-container .fixed-table-pagination').outerHeight(true)+'px)'
+                    })
+                },
+                searchTable: function () {
+                    app.data.table.bootstrapTable('refresh');
+                },
+                initTable: function () {
+                    app.data.table.bootstrapTable({
+                        showExport: true,  //是否显示导出按钮  
+                        pagination: true,
+                        cache: false,
+                        sortable: false,
+                        sidePagination: "server",
+                        clickToSelect: true,
+                        templateView: false,
+                        showHeader: true,
+                        pageNumber: 1,
+                        pageSize: 30,
+                        pageList: [30, 60, 100],
+                        toolbarAlign: 'left',
+                        queryParamsType: 'page',
+                        queryParams: function (params) {    
+                            params.productId = $('#toolbar input[name=productId]').val().trim();
+                            params.productTitle = $('#toolbar input[name=productTitle]').val().trim();
+                            params.productSkuBarcode = $('#toolbar input[name=productSkuBarcode]').val().trim();
+                            var productStatus = $('#toolbar select[name=productStatus]').val();
+                            if(productStatus != '全部'){
+                                params.productStatus = productStatus;
+                            }
+                            var affiliate = $('#toolbar input[name=affiliate]').val();
+                            if(affiliate){
+                                params.affiliate = affiliate.trim();
+                            }
+                            var scopeId = $('#toolbar select[name=scopeId]').select2('val');
+                            params.scope = scopeId == -1 ? '' : scopeId ; 
+                            var datetimes = $("input[name='datetimes']").val().trim();
+                            var orderSubmitBeginTime = datetimes.split(' - ')[0];
+                            var orderSubmitEndTime = datetimes.split(' - ')[1];
+                            if(orderSubmitBeginTime && orderSubmitBeginTime.trim() != 'Invalid date'){
+                                if(moment(orderSubmitBeginTime).get('minute') == 59){
+                                    orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 59).unix();
+                                }else{
+                                    orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 00).unix();
+                                }
+                                params.orderCreateBeginTime = orderSubmitBeginTime;
+                            }
+                            if(orderSubmitEndTime && orderSubmitEndTime.trim() != 'Invalid date'){
+                                if(moment(orderSubmitEndTime).get('minute') == 59){
+                                    orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 59).unix();
+                                }else{
+                                    orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 00).unix();                                    
+                                }
+                                params.orderCreateEndTime = orderSubmitEndTime;
+                            }
+                            var datetimes1 = $("input[name='datetimes1']").val().trim();
+                            var proBeginTime = datetimes1.split(' - ')[0];
+                            var proEndTime = datetimes1.split(' - ')[1];
+                            if(proBeginTime && proBeginTime.trim() != 'Invalid date'){
+                                if(moment(proBeginTime).get('minute') == 59){
+                                    proBeginTime = moment(proBeginTime).set('second', 59).unix();
+                                }else{
+                                    proBeginTime = moment(proBeginTime).set('second', 00).unix();
+                                }
+                                params.productCreateBeginTime = proBeginTime;
+                            }
+                            if(proEndTime && proEndTime.trim() != 'Invalid date'){
+                                if(moment(proEndTime).get('minute') == 59){
+                                    proEndTime = moment(proEndTime).set('second', 59).unix();
+                                }else{
+                                    proEndTime = moment(proEndTime).set('second', 00).unix();                                    
+                                }
+                                params.productCreateEndTime = proEndTime;
+                            }
+                            params.size = params.pageSize;
+                            params.page = parseInt(params.pageNumber) - 1;
+                            return params;
+                        },
+                        url: utils.prePath() + '/api/admin/product/analysis/list',
+                        totalField: 'body.totalElements',
+                        dataField: 'body.content',
+                        columns: app.methods.optionByAuthority(),
+                        onLoadSuccess: function (data) {
+							tableUi.initBootstrapTable();
+                        },
+						onLoadError: function(result){
+							if(result == 403){
+								toastr.error("不允许访问")
+							}else{
+								toastr.error('系统异常,请稍候重试或联系开发人员...');
+							}
+                        }
+                    });
+                },
+                optionByAuthority: function () {
+                    var option = [];
+                    option.push({
+                        field: 'productId',
+                        title: '产品ID',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'barcode',
+                        title: '条形码',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'productImageUrl',
+                        title: '商品图',
+                        align: 'center',
+                        width: 60,
+                        minWidth: 60,
+                        formatter: function (value, row, index, field) {
+							return '<a href="#" onclick = "app.methods.preview('+row.productId+');"><img src="'+value+'" alt="'+row.productTitle+'" class="img-responsive proImage"></a>';
+                        }
+                    },{
+                        field: 'productTitle',
+                        title: '品名',
+                        minWidth: 200,
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'productSkuName',
+                        title: '规格',
+                        minWidth: 200,
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'discountPrice',
+                        title: '折扣价',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + value + '</span>';
+                        }
+                    }, {
+                        field: 'productStatus',
+                        title: '产品状态',
+                        minWidth: 80,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var mes = '--',
+                                stateColor = '';
+                            switch (value) {
+                                case -1: mes = '创建失败'; stateColor = 'label-default'; break;
+                                case 0: mes = '创建中'; stateColor = 'label-info'; break;
+                                case 1: mes = '已创建'; stateColor = 'label-primary'; break;
+                                case 10: mes = '上架'; stateColor = 'label-success'; break;
+                                case 20: mes = '下架'; stateColor = 'label-warning'; break;
+                            }
+                            return '<span class="label ' + stateColor + '">' + mes + '</span>';
+                        }
+                    },{
+                        field: 'saleQuantity',
+                        title: '销量',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'createdAt',
+                        title: '产品创建时间',
+                        align: 'center',
+                        minWidth: 120,
+                        formatter: function (value, row, index, field) {
+                            var time = moment(value.split(' ')[0] + ' ' + value.split(' ')[1]).format('YYYY-MM-DD HH:mm:ss');
+                            return '<span class="text-length-table-col">' + time + '</span>';
+                        }
+                    });
+                    return option;
+                },
+                preview : function(id){
+					layer.open({
+					  	type: 2,
+					  	title: '产品预览',
+					  	maxmin : true,
+					  	shadeClose: true,
+					  	resize : false,	
+					  	shade: 0.8,
+                        area: ['392px', '710px'],
+                        skin:'preview',  
+					  	content: utils.perviewPath(id)
+					});
+				},
+                downloadExcel: function () {
+                    var params = '';
+                    var productId = $('#toolbar input[name=productId]').val().trim();
+                    if(productId){
+                        params += '&productId=' + productId;
+                    }
+                    var productTitle = $('#toolbar input[name=productTitle]').val().trim();
+                    if(productTitle){
+                        params += '&productTitle=' + productTitle;
+                    }
+                    var productSkuBarcode = $('#toolbar input[name=productSkuBarcode]').val().trim();
+                    if(productSkuBarcode){
+                        params += '&productSkuBarcode=' + productSkuBarcode;
+                    }
+                    var affiliate = $('#toolbar input[name=affiliate]').val().trim();
+                    if(affiliate){
+                        params += '&affiliate=' + affiliate;
+                    }
+                    var scopeId = $('#toolbar select[name=scopeId]').select2('val');
+                    if(scopeId != -1){
+                        params += '&scope=' +  scopeId;
+                    }
+                    var productStatus = $('#toolbar input[name=productStatus]').val();
+                    if(productStatus){
+                        params += '&productStatus=' + productStatus;
+                    }
+                    var datetimes = $("input[name='datetimes']").val().trim();
+                    var orderSubmitBeginTime = datetimes.split(' - ')[0];
+                    var orderSubmitEndTime = datetimes.split(' - ')[1];
+                    if(orderSubmitBeginTime && orderSubmitBeginTime.trim() != 'Invalid date'){
+                        if(moment(orderSubmitBeginTime).get('minute') == 59){
+                            orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 59).unix();
+                        }else{
+                            orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 00).unix();
+                        }
+                        params += '&orderCreateBeginTime=' + orderSubmitBeginTime;
+                    }
+                    if(orderSubmitEndTime && orderSubmitEndTime.trim() != 'Invalid date'){
+                        if(moment(orderSubmitEndTime).get('minute') == 59){
+                            orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 59).unix();
+                        }else{
+                            orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 00).unix();                                    
+                        }
+                        params += '&orderCreateEndTime=' + orderSubmitEndTime;
+                    }
+
+                    var datetimes1 = $("input[name='datetimes1']").val().trim();
+                    var proBeginTime = datetimes1.split(' - ')[0];
+                    var proEndTime = datetimes1.split(' - ')[1];
+                    if(proBeginTime && proBeginTime.trim() != 'Invalid date'){
+                        if(moment(proBeginTime).get('minute') == 59){
+                            proBeginTime = moment(proBeginTime).set('second', 59).unix();
+                        }else{
+                            proBeginTime = moment(proBeginTime).set('second', 00).unix();
+                        }
+                        params += '&productCreateBeginTime=' + proBeginTime;
+                    }
+                    if(proEndTime && proEndTime.trim() != 'Invalid date'){
+                        if(moment(proEndTime).get('minute') == 59){
+                            proEndTime = moment(proEndTime).set('second', 59).unix();
+                        }else{
+                            proEndTime = moment(proEndTime).set('second', 00).unix();                                    
+                        }
+                        params += '&productCreateEndTime=' + proEndTime;
+                    }
+
+                    window.open(utils.prePath() + "/api/admin/product/analysis/export?access_token="+utils.cookie.getCookie('accessToken') + params);
+                },
+                initSelect2: function () {
+                    // 接收仓库选择器
+                    $.ajax({
+                        type : "GET",
+                        url : utils.prePath()+"/api/admin/scope/list",
+                        async : false,
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                var data = [{
+                                    id: -1,
+                                    text: '全部',                                    
+                                }];
+                                result.body.content.map(function (e) {
+                                    data.push({
+                                        id: e.id,
+                                        text: e.name,
+                                    })
+                                })
+                                $('select[name="scopeId"]').select2({
+                                    data: data,
+                                    placeholder: "选择来源商城",
+                                    allowClear: true,
+                                    width:'100%'
+                                });
+                                app.data.scopeData = result.body.content;
+                            }else{
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    })
+                },
+                initDatePicker(){
+                    $('input[name="datetimes"]').daterangepicker({
+                        "timePicker": true,
+                        "timePicker24Hour": true,
+                        "startDate": moment().subtract(7, 'days').hours(0).minutes(0),
+                        "endDate": moment(),
+                        "ranges": {
+                            '今天': [moment().hours(0).minutes(0), moment()],
+                            '昨天': [moment().subtract(1, 'days').hours(0).minutes(0), moment().hours(0).minutes(0)],
+                            '7天': [moment().subtract(7, 'days').hours(0).minutes(0), moment().hours(0).minutes(0)],
+                            '30天': [moment().subtract(30, 'days').hours(0).minutes(0), moment().hours(0).minutes(0)],
+                            '这个月': [moment().startOf('month').hours(0).minutes(0), moment().endOf('month').hours(0).minutes(0)],
+                            '上个月': [moment().subtract(1, 'month').startOf('month').hours(0).minutes(0), moment().subtract(1, 'month').endOf('month').hours(0).minutes(0)]
+                        },
+                        "locale": {
+                            "format": 'YYYY-MM-DD HH:mm',
+                        }
+                    });
+                    $('input[name="datetimes1"]').daterangepicker({
+                        "timePicker": true,
+                        "timePicker24Hour": true,
+                        "startDate": false,
+                        "endDate": false,
+                        "ranges": {
+                            '今天': [moment().hours(0).minutes(0), moment()],
+                            '昨天': [moment().subtract(1, 'days').hours(0).minutes(0), moment().hours(0).minutes(0)],
+                            '7天': [moment().subtract(7, 'days').hours(0).minutes(0), moment().hours(0).minutes(0)],
+                            '30天': [moment().subtract(30, 'days').hours(0).minutes(0), moment().hours(0).minutes(0)],
+                            '这个月': [moment().startOf('month').hours(0).minutes(0), moment().endOf('month').hours(0).minutes(0)],
+                            '上个月': [moment().subtract(1, 'month').startOf('month').hours(0).minutes(0), moment().subtract(1, 'month').endOf('month').hours(0).minutes(0)]
+                        },
+                        "locale": {
+                            "format": 'YYYY-MM-DD HH:mm',
+                        }
+                    }).val('');
+                    if(/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)){
+                        $('input[name="datetimes"]').off().flatpickr({
+                            mode: "range",
+                            enableTime: true,
+                            allowInput: true
+                        });
+                        $('input[name="datetimes1"]').off().flatpickr({
+                            mode: "range",
+                            enableTime: true,
+                            allowInput: true
+                        });
+                    }
+                },
+                enterKey : function(){
+					$('#toolbar').keyup(function(event){
+					  	if(event.keyCode ==13){
+					    	app.methods.searchTable();
+					  	}
+					});
+				},
+            },
+            init: function () {
+                app.methods.initSelect2();
+                app.methods.initDatePicker();
+                app.methods.initTable();
+				app.methods.enterKey();
+            }
+        }
+
+        $(function () {
+            app.init();
+        });
+    </script>
+</html>

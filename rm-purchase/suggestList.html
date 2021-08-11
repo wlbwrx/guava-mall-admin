@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>建议采购</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<link rel="stylesheet" href="../dists/hint/hint.css"/>
+		<link rel="stylesheet" href="../dists/select2/dist/css/select2.css" />
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+			.warehouseDetailBox .layui-layer-title i{font-style: normal;padding: 0 6px;font-size: 12px;}
+			.warehouseDetailBox .warehouseList{border: 1px solid #ccc;list-style: none;margin: 25px;padding: 0;}
+			.warehouseDetailBox .warehouseList li{line-height: 36px;height: 36px;margin: 0;}
+			.warehouseDetailBox .warehouseList li span{padding: 0;text-align: center;}
+			.warehouseDetailBox .warehouseList li:first-child{border-bottom: 1px solid #ccc;}
+			.warehouseDetailBox .warehouseList + p{margin: 25px;}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="panel panel-headline">
+				<div class="panel-heading">
+					<div class="left">
+						<h3 class="panel-title">建议采购</h3>
+						<div class="toolBox btn-group">
+							<button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i> 搜索</button>
+							<button class="btn btn-success btn-sm" onclick="app.methods.downloadExcel();"><i class="fa fa-download"></i>&nbsp;&nbsp;导出建议采购单</button>
+						</div>
+					</div>
+					<div class="toolBox btn-group right">
+						<button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+					</div>
+				</div>
+			
+				<div class="panel-body">
+					<div id="toolbar" class="btn-group">
+						<select name="warehouse" class="selectpicker" data-live-search="true" data-title="仓库"></select>
+						<input type="text" class="form-control" name="productSkuBarcode" placeholder="条形码">
+						<input type="text" class="form-control" name="productTitle" placeholder="品名">
+						<button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+					</div>
+					<table id="table-products"></table>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+	<script type="text/javascript" src="../dists/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table-export.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/tableExport.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../js/bootstrap-table-template.js"></script>
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+    <script type="text/javascript" src="../dists/select2/dist/js/select2.full.min.js"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+    <script type="text/html" id="warehouseDetail">
+		<ul class="warehouseList">
+			<% for(var i = 0; i < list.length; i++){ %>
+				<li class="row">
+					<span class="col-md-6"><%= list[i].name %></span>
+					<span class="col-md-6"><%= list[i].num %></span>
+				</li>
+			<% } %>
+		</ul>
+		<p>合计：<%= publicNum %></p>
+	</script>
+	<script type="text/javascript">
+		var app = {
+			data : {
+				table : $("#table-products"),
+                warehouseData: [],
+			},
+			methods : {
+				// showSearchView: function () {
+                //     $('#toolbar .form-inline').toggle()
+                //     $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-down')
+                //     $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-up')
+                //     app.methods.initBootstrapTableStyle();
+                // },
+                // initBootstrapTableStyle: function(){
+                //     $('.panel .panel-body .bootstrap-table').css({
+                //         'height':'calc(100% - '+$('#toolbar').outerHeight(true)+'px)'
+                //     })
+                //     $('.panel .panel-body .bootstrap-table .fixed-table-container').css({
+                //         'height':'calc(100% - '+$('.panel .panel-body .bootstrap-table .fixed-table-container .fixed-table-pagination').outerHeight(true)+'px)'
+                //     })
+                // },
+				// searchTable: function () {
+                //     app.data.table.bootstrapTable('refresh');
+                // },
+				initTable : function(){
+					app.data.table.bootstrapTable({
+						pagination : true, 
+						cache: false,
+						sortable: false,
+						sidePagination: "server",
+						clickToSelect : true,
+						templateView : false,
+						showHeader : true,
+						pageNumber : 1 , 
+						pageSize : 15 , 
+						pageList : [15 , 30 , 45 , 90],
+						toolbarAlign : 'left',
+						queryParamsType : 'page' ,
+						queryParams : function(params){
+							params.productSkuBarcode = $('#toolbar input[name=productSkuBarcode]').val().trim();
+							params.productTitle = $('#toolbar input[name=productTitle]').val().trim();
+							var warehouseId = $('#toolbar select[name=warehouse]').select2('val');
+                            if(warehouseId){
+                                params.warehouseId = warehouseId;
+                            }
+							params.size = params.pageSize;
+							params.page = parseInt(params.pageNumber)-1;
+							return params;
+						},
+                        url: utils.prePath() + '/api/admin/purchase/advise/list',
+						totalField: 'body.totalElements',
+        				dataField: 'body.content',
+					    columns: app.methods.optionByAuthority(),
+					    onLoadSuccess : function(data){
+							tableUi.initBootstrapTable();
+							// app.methods.initBootstrapTableStyle();
+					    },
+						onLoadError: function(result){
+							if(result == 403){
+								toastr.error("不允许访问")
+							}else{
+								toastr.error('系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+				},
+				downloadExcel: function () {
+                    var params = '';
+					var productSkuBarcode = $('#toolbar input[name=productSkuBarcode]').val().trim(),
+						productTitle = $('#toolbar input[name=productTitle]').val().trim(),
+						warehouseId = $('#toolbar select[name=warehouse]').select2('val');
+					if(productSkuBarcode){
+                        params += '&productSkuBarcode=' + productSkuBarcode;
+                    }
+					if(productTitle){
+                        params += '&productTitle=' + productTitle;
+                    }
+					if(warehouseId){
+                        params += '&warehouseId=' + warehouseId;
+                    }
+
+                    window.open(utils.prePath() + "/api/admin/purchase/advise/list/export?access_token="+utils.cookie.getCookie('accessToken') + params);
+                },
+                optionByAuthority: function () {
+                    // 管理员
+                    var option = [{
+						field: 'productId',
+						title: 'ID',
+						align: 'center',
+						formatter: function (value, row, index, field) {
+							return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+						}
+					}, {
+                        field: 'productSkuBarcode',
+                        title: '条形码',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+							return '<a href="'+row.productSourceUrl+'" target="_blank">'+value+'</a>';
+                        }
+                    }, {
+                        field: 'productImageUrl',
+                        title: '商品图',
+                        align: 'center',
+                        width: 60,
+						minWidth: 60,   
+                        formatter: function (value, row, index, field) {
+							if(value){
+								return '<a href="#" onclick = "app.methods.preview('+row.productId+');"><img src="'+value+'" alt="'+row.title+'" class="img-responsive proImage"></a>';
+							}
+                        }
+                    }, {
+                        field: 'productTitle',
+                        title: '品名',
+                        minWidth: 200,
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'productSkuName',
+                        title: '规格',
+                        minWidth: 100,
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'warehouseId',
+                        title: '采购仓库',
+                        minWidth: 100,
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+							var hourseName = '';							
+							app.data.warehouseData.map(function(e){
+								if(value == e.id){
+									hourseName = e.text
+								}
+							})
+                            return '<span class="text-length-table-col">' + hourseName + '</span>';
+                        }
+                    }, {
+                        field: 'productPendingQuantity',
+                        title: '用户待发',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + value + '</span>';
+                        }
+                    }, {
+                        field: 'warehouseInventoryQuantity',
+                        title: '库存',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var proName = "'" + row.proName + "'";
+                            var barCode = "'" + row.barCode + "'"; 
+							var proPic = "'" + row.proPic + "'";
+							return '<span class="text-length-table-col">' + value + '</span>'
+							// + '<a class="simpleBtn" href="#" onclick="app.methods.showWarehouseDetails(' + barCode + ',' + proPic + ',' + proName + ')">各仓明细</a>';
+                        }
+                    }, {
+                        field: 'productTransitQuantity',
+                        title: '在途',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + value + '</span>';
+                        }
+                    }, {
+                        field: 'adviseQuantity',
+                        title: '建议采购量',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + value + '</span>';
+                        }
+					}, {
+                        field: 'advisePrice',
+                        title: '建议采购价（￥）',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + value + '</span>';
+                        }
+                    }, {
+                        field: 'updatedAt',
+                        title: '生成时间',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            var time = moment(value.split(' ')[0] + ' ' + value.split(' ')[1]).format('YYYY-MM-DD HH:mm:ss');
+                            return '<span class="text-length-table-col">' + time + '</span>';
+                        }
+                    }];
+                    return option;
+				},
+                showWarehouseDetails:function(barCode){
+                    console.log(barCode)
+
+                    var allNum = 0;
+					app.data.warehouseDate.map(function (e, i) {
+						allNum += e.num - 0;
+					})
+					var data = {
+						list: [{
+							name: '仓库',
+							num: '库存'
+						}].concat(app.data.warehouseDate),
+						publicNum: allNum
+					};
+
+					layer.open({
+						type: 1,
+						content: template('warehouseDetail', data),
+						area: ['400px', '360px'],
+						title: '各仓明细<i>' + moment().format("YYYY.MM.DD") + '</i>',
+						skin: 'warehouseDetailBox'
+                    });
+                },
+                initSelect2 : function(){
+					$.ajax({
+                        type: "get",
+                        url: utils.prePath() + "/api/admin/warehouse/list",
+                        async: false,
+                        success: function (result) {
+                            if (result.statusCode == 'OK') {
+                                var data = [];
+                                result.body.map(function (e) {
+                                    data.push({
+                                        id: e.id,
+                                        text: e.warehouseName
+                                    })
+                                })
+                                $('select[name="warehouse"]').select2({
+                                    data: data,
+                                    placeholder: "选择接收仓库",
+                                    allowClear: true,
+                                    width:'100%'
+                                });
+                                $('select[name="warehouse"]').val('').trigger('change')
+                            } else {
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    });
+				},
+				preview : function(id){
+					layer.open({
+					  	type: 2,
+					  	title: '产品预览',
+					  	maxmin : true,
+					  	shadeClose: true,
+					  	resize : false,	
+					  	shade: 0.8,
+					  	area: ['392px', '710px'],
+					  	content: utils.perviewPath(id)
+					});
+				},
+				initWarehourse: function(){
+					$.ajax({
+                        type: "get",
+                        url: utils.prePath() + "/api/admin/warehouse/list",
+                        async: false,
+                        success: function (result) {
+                            if (result.statusCode == 'OK') {
+                                var data = [];
+                                result.body.map(function (e) {
+                                    data.push({
+                                        id: e.id,
+                                        text: e.warehouseName
+                                    })
+                                })
+                                app.data.warehouseData = data;
+                            } else {
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    });
+				},
+				enterKey : function(){
+					$('#toolbar').keyup(function(event){
+					  	if(event.keyCode ==13){
+					    	app.methods.searchTable();
+					  	}
+					});
+				}
+			},
+			init : function(){
+				app.methods.initWarehourse();
+				app.methods.initSelect2();
+				app.methods.initTable();
+				app.methods.enterKey();
+			}
+		}
+		
+		$(function(){
+			app.init();
+		});
+	</script>
+</html>

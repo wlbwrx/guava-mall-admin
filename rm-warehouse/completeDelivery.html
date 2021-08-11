@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Home</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<link rel="stylesheet" href="../dists/hint/hint.css"/>
+		<link rel="stylesheet" href="../dists/select2/dist/css/select2.css" />
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+			.modal{z-index: 2;}
+            .modal-backdrop{z-index: 1;}
+			.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th{vertical-align: middle;}
+			#toolbar.btn-group .btn{margin-top: 2px;}
+			#toolbar.btn-group{width: 100%;}
+			#toolbar.btn-group .form-inline{display: block;float: right;margin-left: 10px;}
+			.text-length{display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 2;overflow: hidden;font-weight: 500;font-size: 15px;min-height: 42px;}
+			.text-length-table-col{display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 3;overflow: hidden;}
+			.carousel-inner>.item>a>img, .carousel-inner>.item>img, .img-responsive, .thumbnail a>img, .thumbnail>img{cursor: pointer;}
+			.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th{max-width: 300px;}
+
+            .layui-layer-content{padding: 20px;}
+
+            .packageTable img{width: 42px;height: 42px;}
+
+			/* 移动化 */
+			@media screen and (min-width: 769px) {
+				.modal-dialog .modal-content{min-width: 700px;}
+			}
+			@media screen and (max-width: 768px) {
+				#toolbar.btn-group > button:nth-child(2){display: none;}
+				#toolbar.btn-group > .form-inline {display: none;margin: 10px 0 0 0;width: 100%;}
+				#toolbar.btn-group > .form-inline input,
+				#toolbar.btn-group > .form-inline span.select2{width: 100% !important;}
+				.fixed-table-toolbar .columns .keep-open > button{margin-top: 2px;}
+				.bootstrap-table .fixed-table-toolbar {position: relative;}
+				.bootstrap-table .fixed-table-toolbar .bs-bars {width: 100%;}
+				.bootstrap-table .fixed-table-toolbar > .columns {position: absolute;right: 0;top: 0;}
+                .layui-layer{max-width: 100%;}  
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="panel panel-headline">
+				<div class="panel-heading">
+					<h3 class="panel-title">出库-待发货</h3>
+					<div class="right">
+						<button type="button" onclick="window.location.reload();"><i class="fa fa-refresh"></i></button>
+					</div>
+				</div>
+				<div class="panel-body">
+					<div id="toolbar" class="btn-group">
+                        <button type="button" class="btn btn-info" onclick="app.methods.showSearchView();"><i class="fa fa-angle-double-up"></i>&nbsp; 搜索 </button>
+					    <div class="form-inline">
+                            <div class="form-group">
+                                <input type="text" class="form-control" name="productId" placeholder="输入订单号" style="width: 150px;">
+                            </div>
+						    <div class="form-group">
+						    	<input type="text" class="form-control" name="productId" placeholder="输入条形码" style="width: 150px;">
+						    </div>
+						    <div class="form-group">
+						    	<input type="text" class="form-control" name="productTitle" placeholder="输入品名" style="width: 200px;">
+                            </div>
+						  	<button class="btn btn-primary" onclick="app.methods.searchTable();"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+					    </div>
+					</div>
+					<table id="table-products"></table>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+	<script type="text/javascript" src="../dists/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+    <script type="text/javascript" src="../dists/select2/dist/js/select2.full.min.js"></script>
+	<script type="text/javascript">
+		var app = {
+			data : {
+				table : $("#table-products"),
+                expressCompany:['顺丰快递', 'ems', '百世快递', '宅急送', '中通快递', '申通快递', '圆通快递', '韵达快递', '天天快递', '德邦快递'],
+                warehouseDate: [{
+					name: '深圳-蜜仓',
+					num: '12',
+					list: [{
+						changeTime: '2018.3.20 09:30',
+						type: '出库',
+						way: '销售出库',
+						before: '80',
+						after: '60',
+						user: '',
+						note: '',
+						cargoNum: '',
+						cargoCompony: ''
+					}, {
+						changeTime: '2018.3.19 09:30',
+						type: '盘点',
+						way: '盘点出库',
+						before: '90',
+						after: '80',
+						user: '王朋周',
+						note: '商品丢失',
+						cargoNum: '',
+						cargoCompony: ''
+					}, {
+						changeTime: '2018.3.18 09:30',
+						type: '出库',
+						way: '销售出库',
+						before: '80',
+						after: '60',
+						user: '',
+						note: '',
+						cargoNum: '',
+						cargoCompony: ''
+					}, {
+						changeTime: '2018.3.18 07:30',
+						type: '入库',
+						way: '采购入库',
+						before: '100',
+						after: '120',
+						user: '王朋周',
+						note: '',
+						cargoNum: 'XXXXXXXXXX',
+						cargoCompony: '韵达快递'
+					}]
+				}, {
+					name: '广东-森宏',
+					num: '18',
+				}, {
+					name: '台湾-蜜仓',
+					num: '2'
+				}, {
+					name: '台湾-森宏',
+					num: '9'
+				}, {
+					name: '西安-总仓',
+					num: '3'
+				}]
+			},
+			methods : {
+                showSearchView:function(){
+					$('#toolbar .form-inline').toggle('fast')
+					$('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-down')
+					$('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-up')
+				},
+				initTable : function(){
+					app.data.table.bootstrapTable({
+						pagination : true , 
+						cache: false,
+						sortable: false,
+						sidePagination: "server",
+						showColumns : true,
+						toolbar : '#toolbar',
+						clickToSelect : true,
+						templateView : false,
+						showHeader : true,
+						pageNumber : 1 , 
+						pageSize : 15 , 
+                        pageList : [15 , 30 , 45 , 90],
+                        detailView : true,
+						toolbarAlign : 'left',
+						queryParamsType : 'page' , //When requesting remote data, you can send additional parameters by modifying queryParams. If queryParamsType = 'limit', the params object contains: limit, offset, search, sort, order Else, it contains: pageSize, pageNumber, searchText, sortName, sortOrder. Return false to stop request.
+						queryParams : function(params){
+                            // console.log(params)
+							// params.status = $('#toolbar select[name=status]').val().trim();
+							// params.productId = $('#toolbar input[name=productId]').val().trim();
+							// params.productTitle = $('#toolbar input[name=productTitle]').val().trim();
+							// params.size = params.pageSize;
+							// params.page = parseInt(params.pageNumber)-1;
+							return params;
+						},
+                        // url: utials.prePath() + '/api/admin/campaign/list',
+                        url : 'data1.json',
+						totalField: 'body.totalElements',
+        				dataField: 'body.content',
+					    columns: app.methods.optionByAuthority(),
+					    onLoadSuccess : function(data){
+					    	//处理图片显示
+							$('#table-products .thumbnail img').height($('#table-products .thumbnail img').width());
+                            $('[data-toggle="tooltip"]').tooltip();
+                        },
+                        onExpandRow : function (index, row, $detail) {
+                            console.log('渲染子表')
+                            var packageTable = $detail.html('<table class="packageTable" id="packageTable_'+index+'"></table>').find('table');
+                            $(packageTable).bootstrapTable({
+                                showHeader : true,
+                                data : row.detail,
+                                dataField: 'body.content['+index+'].detail',
+                                columns: app.methods.packageOption(),
+                                onPostBody: function(data){
+                                    // 处理合并显示
+                                    // 对比不同的订单号
+                                    setTimeout(function(){
+                                        function findDiff(e){
+                                            for (var i = 0; i < Data.length; i++) {
+                                                if (e.expressNum !== Data[i].data.expressNum) {
+                                                    return true;    
+                                                }
+                                            }
+                                        }
+                                        var Data = [];
+                                        var type = 0;
+                                        data.map(function (e, j) {
+                                            if(j != 0 && findDiff(e)) type += 1;
+                                            Data.push({
+                                                data: e,
+                                                index: j,
+                                                type: type
+                                            })
+                                        })
+                                        var _data = [[]];
+                                        var _type = 0;
+
+                                        // 根据不同的订单号分组（type），生成新数组
+                                        for (var i = 0; i < Data.length; i++) {
+                                            if (Data[i].type == _type) {
+                                                _data[_type].push(Data[i])
+                                            } else {
+                                                _type += 1;
+                                                _data.push([Data[i]])
+                                            }
+                                        }
+
+                                        for (var i = 0; i < _data.length; i++) {
+                                            console.log({
+                                                index: _data[i][0].index,
+                                                field: 'expressNum',
+                                                rowspan: _data[i].length
+                                            })
+                                            // 合并表格
+                                            var mergeData = ["expressNum","time","expressPrice","state"];
+                                            mergeData.map(function(e){
+                                                $(packageTable).bootstrapTable('mergeCells', {
+                                                    index: _data[i][0].index,
+                                                    field: e,   
+                                                    rowspan: _data[i].length
+                                                });
+                                            })
+                                        }
+                                
+                                    },100)
+                                }
+                            })
+                        }
+					});
+                },
+                packageOption: function () {
+                    // 管理员
+                    var option = [{
+                        field: 'expressNum',
+                        title: '包裹物流',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'barCode',
+                        title: '条形码',
+                        align: 'center',
+                        width: 50,
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'proPic', 
+                        title: '商品图',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<img width="100%" class="" src="' + value + '" />';
+                        }
+                    }, {
+                        field: 'proName', 
+                        title: '品名',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'proSize', 
+                        title: '规格',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'orderProNum', 
+                        title: '数量',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'price',
+                        title: '下单价',
+                        width: 80,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'time',
+                        title: '发货时间',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'expressPrice',
+                        title: '运费（￥）',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'state',
+                        title: '状态',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }];
+                    return option;
+                },
+                optionByAuthority: function () {
+                    // 管理员
+                    var option = [{
+                        field: 'orderNum',
+                        title: '订单号',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'orderProNum',
+                        title: '商品数量',
+                        align: 'center',
+                        width: 50,
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'price', 
+                        title: '总价（￥）',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        title: '运费（￥）',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            var num = 0;
+                            row.detail.map(function(e){
+                                num += (e.expressPrice - 0)
+                            })
+                            return '<span class="text-length-table-col">' + (num || '--') + '</span>';
+                        }
+                    }, {
+                        title: '物流数量',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (row.detail.length || '--') + '</span>';
+                        }
+                    }, {
+                        title: '状态',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var state_0 = 0,
+                                state_1 = 0,
+                                state = '在途';
+                            row.detail.map(function(e){
+                                if(e.state == "妥投"){
+                                    state_0 += 1
+                                }
+                                if(e.state == "拒收"){
+                                    state_1 += 1
+                                }
+                            })
+                            if(state_0 == row.detail.length){
+                                state = "妥投"
+                            }
+                            if(state_1>0){
+                                state = "拒收"
+                            }
+                            return '<span class="text-length-table-col">' + (state || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'time',
+                        title: '下单时间',
+                        width: 80,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'name',
+                        title: '姓名',
+                        align: 'center',
+                        minWidth: 80,
+                        width: 80,
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }, {
+                        field: 'tel',
+                        title: '电话',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    },{
+                        field: 'address',
+                        title: '地址',
+                        align: 'center',
+                        width: 120,
+                        minWidth: 120,
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (moment().isSame(value, 'day') ? '今天' : value) + '</span>';
+                        }
+                    },{
+                        title: '订单耗时',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (moment().isSame(value, 'day') ? '今天' : value) + '</span>';
+                        }
+                    }];
+                    return option;
+                }
+            },
+            event:{
+                selectAll:function(e,domList){
+                    domList && domList.each(function(){
+                        if(e.is(':checked')){
+                            if(!$(this).is(':checked')){
+                                $(this).click();
+                            }
+                        }else{
+                            if($(this).is(':checked')){
+                                $(this).click();
+                            }
+                        }
+                    })
+                },
+                init:function () {
+                    $('#table-products thead input[type="checkbox"]').on('click',function(){
+                        app.event.selectAll($(this),$('#table-products tbody input[type="checkbox"]'))
+                    })
+                }
+            },
+			init : function(){
+				app.methods.initTable();
+				// app.methods.initSelect2();
+				// app.methods.enterKey();
+				app.event.init();
+			}
+		}
+		
+		$(function(){
+			app.init();
+		});
+	</script>
+</html>

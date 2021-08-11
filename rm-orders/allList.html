@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Home</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<link rel="stylesheet" href="../dists/hint/hint.css"/>
+        <link rel="stylesheet" href="../dists/select2/dist/css/select2.css" />
+        <link rel="stylesheet" type="text/css" href="../dists/daterangepicker/daterangepicker.css" />
+        <link href="https://cdn.bootcss.com/flatpickr/4.4.6/flatpickr.min.css" rel="stylesheet">
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+            .orderTable input[type=number]{width:50px}
+            .orderTable td,.orderTable th{text-align:center}
+            .orderTable img{height:42px;width:42px}
+
+            .formBox{display:flex}
+            .formBox div{flex:1;margin-right:6px}
+            
+            .trackerInfo h3{margin: 12px 0 0 0;font-size: 16px;}
+            .trackerInfo table{margin-top: 12px;}
+
+            #toolbar.btn-group .btn{display: none;}
+		</style>
+	</head>
+	<body>
+        <div class="container-fluid">
+            <div class="panel panel-headline">
+				<div class="panel-heading">
+                    <div class="left">
+                        <h3 class="panel-title">全部订单</h3>
+                        <div class="toolBox btn-group">
+                            <button class="btn btn-info btn-sm searchOpen" onclick="tableUi.showSearchView();"><i class="fa fa-angle-double-up"></i> 搜索</button>
+                            <button class="btn btn-primary btn-sm" id="downloadExcel"><i class="fa fa-download"></i>&nbsp;&nbsp;导出发货单</button>
+                            <button class="btn btn-primary btn-sm" id="uploadExcel"><i class="fa fa-upload"></i>&nbsp;&nbsp;上传发货单</button>
+                            <button class="btn btn-primary btn-sm" id="exportOrder"><i class="fa fa-download"></i>&nbsp;&nbsp;导出订单</button>
+                            <button class="btn btn-primary btn-sm" id="updateTracker" onclick="app.methods.updateTrackerAll();"><i class="fa fa-random"></i>&nbsp;&nbsp;更新物流</button>
+                            <a style="display: inline-block;" class="btn btn-info btn-sm" id="excelExample" href="../发货信息导入.xls">下载模板</a>
+                        </div>
+                    </div>
+                    <div class="toolBox btn-group right">
+                        <button class="btn btn-info btn-sm refresh" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div id="toolbar" class="btn-group">
+                        <input type="text" class="form-control" name="orderCode" placeholder="输入订单号">
+                        <input type="text" class="form-control" name="productId" placeholder="输入产品ID">
+                        <input type="text" class="form-control" name="productTitle" placeholder="输入品名">
+                        <input type="text" class="form-control" name="productSkuBarcode" placeholder="输入条形码">
+                        <select type="text" class="form-control" name="scopeId" style="min-width: 150px;"></select>
+                        <input type="text" class="form-control" name="affiliate" placeholder="输入投放人姓名">
+                        <select type="text" class="form-control" name="warehouse" style="min-width: 150px;"></select>
+                        <input type="text" class="form-control" name="deliveryCode" placeholder="输入发货单号">
+                        <input type="text" class="form-control" name="expressNum" placeholder="输入货运单号">
+                        <input type="text" class="form-control" name="consignee" placeholder="输入收件人">
+                        <input type="text" class="form-control" name="tel" placeholder="输入收件电话">
+                        <input type="text" class="form-control" name="datetimes" placeholder="选择时间" />
+                        <input type="text" class="form-control" name="datetimes1" placeholder="物流时间" />
+                        <select type="text" class="form-control" name="orderStatus" style="min-width: 150px;">
+                            <option value="全部">全部订单状态</option>
+                            <option value="-10">已取消</option>
+                            <option value="0">已提交</option>
+                            <option value="5">待审核</option>
+                            <option value="10">已审核</option>
+                            <option value="20">待分仓</option>
+                            <option value="21">已分仓</option>
+                            <option value="30">待发货</option>
+                            <option value="35">已打包</option>
+                            <option value="40">已发货</option>
+                            <option value="50">已完成</option>
+                        </select>
+                        <select type="text" class="form-control" name="trackerStatus" style="min-width: 150px;">
+                            <option value="全部">全部物流状态</option>
+                            <option value="notfound">查询不到</option>
+                            <option value="transit">运输途中</option>
+                            <option value="pickup">到达待取</option>
+                            <option value="delivered">成功签收</option>
+                            <option value="undelivered">投递失败</option>
+                            <option value="exception">可能异常</option>
+                            <option value="expired">运输过久</option>
+                            <option value="null">查询超时</option>
+                        </select>
+                        <select type="text" class="form-control" name="paymentType" style="min-width: 150px;">
+                            <option value="全部">全部支付方式</option>
+                            <option value="1">货到付款</option>
+                            <option value="2">paypal</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="app.data.table.bootstrapTable('refresh');"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+                    </div>
+                    <table id="table-products"></table>
+                </div>
+            </div>
+        </div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../js/bootstrap-table-template.js"></script>
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+    <script type="text/javascript" src="../dists/select2/dist/js/select2.full.min.js"></script>
+    <script type="text/javascript" src="../dists/plupload-2.3.6/js/plupload.full.min.js"></script>
+	<script type="text/javascript" src="../dists/plupload-2.3.6/js/i18n/zh_CN.js"></script>
+    <script type="text/javascript" src="../js/plupload-upload.js"></script>
+    <script type="text/javascript" src="../dists/flatpickr/flatpickr.js"></script>
+    <script type="text/javascript" src="../dists/daterangepicker/daterangepicker.min.js"></script>
+    <script src="http://oss.sheetjs.com/js-xlsx/xlsx.core.min.js"></script>
+	<script type="text/javascript" src="../js/public-func.js?v=20200331"></script>
+    <script>
+        // <!-- https://gitee.com/baojuhua/lutils/blob/master/min/xlsx.utils.min.js -->
+        var xlsxUtils = (function () { var t = { Binary: { fixdata: function (e) { for (var r = "", t = 0, n = 10240; t < e.byteLength / n; ++t)r += String.fromCharCode.apply(null, new Uint8Array(e.slice(t * n, t * n + n))); return r += String.fromCharCode.apply(null, new Uint8Array(e.slice(t * n))) }, s2ab: function (e) { for (var r = new ArrayBuffer(e.length), t = new Uint8Array(r), n = 0; n != e.length; ++n)t[n] = 255 & e.charCodeAt(n); return r } }, _wb: null, _rABS: !1, import: function (e, r) { this.wb = null; var n = new FileReader; n.onload = function (e) { var n = e.target.result; t._wb = t._rABS ? XLSX.read(btoa(t.Binary.fixdata(n)), { type: "base64" }) : XLSX.read(n, { type: "binary" }), "function" == typeof r && r(t._wb) }, t._rABS ? n.readAsArrayBuffer(e) : n.readAsBinaryString(e) }, getSheetByName: function (e) { return XLSX.utils.sheet_to_json(t._wb.Sheets[e]) }, getSheetByIndex: function () { var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0; return t.getSheetByName(t._wb.SheetNames[e]) }, export: function (e, r) { var n = null; for (var o in e) { var a = t.format2Sheet(e[o]); n = t.format2WB(a, o, n) } return t.format2Blob(n, r) }, readDataHead: function (e) { var r = {}, t = Array.isArray(e) ? Object.keys(e[0]) : e, n = !0, o = !1, a = void 0; try { for (var i, f = t[Symbol.iterator](); !(n = (i = f.next()).done); n = !0) { var u = i.value; r[u] = u } } catch (e) { o = !0, a = e } finally { try { !n && f.return && f.return() } finally { if (o) throw a } } return r }, format2Sheet: function (e) { var r = Object.keys(e[0]), n = []; return e.map(function (e, n) { return r.map(function (r, o) { return Object.assign({}, { v: e[r], position: (o > 25 ? t.getCharCol(o) : String.fromCharCode(65 + o)) + (n + 1) }) }) }).reduce(function (e, r) { return e.concat(r) }).forEach(function (e, r) { return n[e.position] = { v: e.v } }), n }, format2WB: function (e) { var r = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "mySheet", t = arguments[2], n = Object.keys(e); return t || (t = new Object, t.Sheets = {}, t.SheetNames = []), t.SheetNames.push(r), t.Sheets[r] = Object.assign({}, e, { "!ref": n[0] + ":" + n[n.length - 1] }), t }, format2Blob: function (e, r) { return new Blob([t.Binary.s2ab(XLSX.write(e, { bookType: void 0 == r ? "xlsx" : r, bookSST: !1, type: "binary" }))], { type: "" }) }, getCharCol: function (e) { for (var r = "", t = 0; e > 0;)t = e % 26 + 1, r = String.fromCharCode(t + 64) + r, e = (e - t) / 26; return r } }; return t; })();
+    </script>
+    <script>
+        // <!-- https://gitee.com/baojuhua/lutils/blob/master/min/saveAs.min.js --> 
+        function saveAs(e, t) { if (!("string" != typeof e || e.length <= 0)) { var n = document.createElement("a"); n.id = "download-" + Date.parse(new Date), n.href = e, n.download = t || "", n.style = "opacity: 0;height: 1px;width: 1px;overflow: hidden;position:fixed;top: -1;left: -1;z-index: -1;", document.body.appendChild(n), document.getElementById(n.id).click(), document.body.removeChild(document.getElementById(n.id)) } }
+    </script>
+
+    <script type="text/html" id="trackerInfo">
+        <div class="trackerInfo">
+            <span class="label label-success"><%= status %></span>
+            <h3>订单编号：<span><%= orderCode %></span></h3>
+            <h3>货运编号：<span><%= destinationCode %></span></h3>
+            <h3>货运公司：<span><%= carrierCode %></span></h3>
+            <h3>包裹编号：<span><%= trackingNumber %></span></h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>所在地</th>
+                        <th>配送状态</th>
+                        <th>配送详情</th>
+                        <th>更新时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for(var i = 0;i < trackinfo.length;i++){ %>
+                        <tr>
+                            <td style="text-align:center;"><%= i %></td>
+                            <td><%= trackinfo[i].Details %></td>
+                            <td><%= trackinfo[i].checkpoint_status %></td>
+                            <td><%= trackinfo[i].StatusDescription %></td>
+                            <td><%= trackinfo[i].Date %></td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+        
+        <h4></h4>
+        <p></p>
+    </script>
+    <script type="text/html" id="customerInfo">
+        <div class="customerInfoForm">
+            <div class="form-group"><label>收件人</label><input type="text" class="form-control" name="consignee" placeholder="收件人" value="<%= data.consignee %>"></div>
+            <div class="form-group"><label>电话</label><input type="text" class="form-control" name="tel" placeholder="电话" value="<%= data.tel %>"></div>
+            <div class="form-group"><label>城市</label><input type="text" class="form-control" name="city" placeholder="城市" value="<%= data.city %>"></div>
+            <div class="form-group"><label>区</label><input type="text" class="form-control" name="district" placeholder="区" value="<%= data.district %>"></div>
+            <div class="form-group"><label>详细地址</label><input type="text" class="form-control" name="detail" placeholder="详细地址" value="<%= data.detail %>"></div>
+            <button class="btn btn-primary" onclick="app.methods.submitCustomInfo(<%= data.orderId %>)">提交更改</button>
+            <button class="btn btn-info" style="float:right" onclick="app.methods.easyBuy(<%= index %>)">快捷下单</button>
+        </div>
+    </script>
+    <script type="text/javascript">
+        var app = {
+            data: {
+                table: $("#table-products"),
+                warehouseData: [],
+                orderData:null,
+                totalElements:null
+            },
+            methods: {
+                initExportOrder: function(){
+                    $('#exportOrder').click(function(){
+                        // 计算params
+                        var params = '';
+                        var productSkuBarcode = $('#toolbar input[name=productSkuBarcode]').val().trim(),
+                            productTitle = $('#toolbar input[name=productTitle]').val().trim(),
+                            orderCode = $('#toolbar input[name=orderCode]').val().trim(),
+                            waybillCode = $('#toolbar input[name=expressNum]').val().trim(),
+                            productId = $('#toolbar input[name=productId]').val().trim(),
+                            warehouseId = $('#toolbar select[name=warehouse]').select2('val'),
+                            consignee = $('#toolbar input[name=consignee]').val().trim(),
+                            tel = $('#toolbar input[name=tel]').val().trim(),
+                            deliveryCode = $('#toolbar input[name=deliveryCode]').val().trim(),
+                            scopeId = $('#toolbar select[name=scopeId]').select2('val'),
+                            orderStatus = $('#toolbar select[name=orderStatus]').val(),
+                            trackerStatus = $('#toolbar select[name=trackerStatus]').val(),
+                            paymentType = $('#toolbar select[name=paymentType]').val(),
+                            affiliate = $('#toolbar input[name=affiliate]').val().trim();
+                        if(affiliate){
+                            params += '&affiliate=' + affiliate;
+                        }
+                        if(orderStatus != '全部'){
+                            params += '&orderStatus=' + orderStatus;
+                        }
+                        if(trackerStatus != '全部'){
+                            params += '&trackerStatus=' + trackerStatus;
+                        }
+                        if(paymentType != '全部'){
+                            params += '&paymentType=' + paymentType;
+                        }
+                        if(scopeId != -1){
+                            params += '&scopeId=' + scopeId;
+                        }
+                        if(productSkuBarcode){
+                            params += '&productSkuBarcode=' + productSkuBarcode;
+                        }
+                        if(productTitle){
+                            params += '&productTitle=' + productTitle;
+                        }
+                        if(orderCode){
+                            params += '&orderCode=' + orderCode;
+                        }
+                        if(waybillCode){
+                            params += '&waybillCode=' + waybillCode;
+                        }
+                        if(productId){
+                            params += '&productId=' + productId;
+                        }
+                        if(warehouseId != -1){
+                            params += '&warehouseId=' + warehouseId;
+                        }
+                        if(consignee){
+                            params += '&consignee=' + consignee;
+                        }
+                        if(tel){
+                            params += '&tel=' + tel;
+                        }
+                        if(deliveryCode){
+                            params += '&deliveryCode=' + deliveryCode;
+                        }
+                        var datetimes = $("input[name='datetimes']").val().trim();
+                        var orderSubmitBeginTime = datetimes.split(' - ')[0];
+                        var orderSubmitEndTime = datetimes.split(' - ')[1];
+                        if(orderSubmitBeginTime){
+                            if(moment(orderSubmitBeginTime).get('minute') == 59){
+                                orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 59).unix();
+                            }else{
+                                orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 00).unix();
+                            }
+                            params += '&orderSubmitBeginTime=' + orderSubmitBeginTime;
+                        }
+                        if(orderSubmitEndTime){
+                            if(moment(orderSubmitEndTime).get('minute') == 59){
+                                orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 59).unix();
+                            }else{
+                                orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 00).unix();                                    
+                            }
+                            params += '&orderSubmitEndTime=' + orderSubmitEndTime;
+                        }
+                        var datetimes1 = $("input[name='datetimes1']").val().trim();
+                        var lastUpdateBeginTime = datetimes1.split(' - ')[0];
+                        var lastUpdateEndTime = datetimes1.split(' - ')[1];
+                        if(lastUpdateBeginTime){
+                            if(moment(lastUpdateBeginTime).get('minute') == 59){
+                                lastUpdateBeginTime = moment(lastUpdateBeginTime).set('second', 59).unix();
+                            }else{
+                                lastUpdateBeginTime = moment(lastUpdateBeginTime).set('second', 00).unix();
+                            }
+                            params += '&lastUpdateBeginTime=' + lastUpdateBeginTime;
+                        }
+                        if(lastUpdateEndTime){
+                            if(moment(lastUpdateEndTime).get('minute') == 59){
+                                lastUpdateEndTime = moment(lastUpdateEndTime).set('second', 59).unix();
+                            }else{
+                                lastUpdateEndTime = moment(lastUpdateEndTime).set('second', 00).unix();                                    
+                            }
+                            params += '&lastUpdateEndTime=' + lastUpdateEndTime;
+                        }
+                        params += '&size=' + app.data.totalElements;
+                        params += '&page=0';
+
+                        $.ajax({
+                            type: "get",
+                            url: utils.prePath() + '/api/admin/order/delivery/export?sortOrder=asc'+params,
+                            success: function (result) {
+                                if (result.statusCode == 'OK') {
+                                    if(!result.body.content.length){
+                                        return false;
+                                    }
+                                    var data = [];
+                                    var orderCode = '',
+                                        orderFreightPrice = '',
+                                        orderTotalPrice = '',
+                                        orderStatus = '',
+                                        trackerStatus = '',
+                                        paymentType = '',
+                                        lastUpdateTime = '',
+                                        affiliate = '',
+                                        scopeName = '',
+                                        orderSubmitTime = '',
+                                        consignee = '',
+                                        tel = '',
+                                        address = '',
+                                        noteVal = '',
+                                        remark = '',
+                                        email = '';
+                                    result.body.content.map(function(e,i){
+                                        var orderProductStatus = '';
+                                        switch (e.orderProductStatus) {
+                                            case -10: orderProductStatus = '已取消'; break;
+                                            case 0: orderProductStatus = '已提交'; break;
+                                            case 5: orderProductStatus = '待审核'; break;
+                                            case 10: orderProductStatus = '已审核'; break;
+                                            case 20: orderProductStatus = '待分仓'; break;
+                                            case 21: orderProductStatus = '已分仓'; break;
+                                            case 25: orderProductStatus = '发货排队'; break;
+                                            case 30: orderProductStatus = '待发货'; break;
+                                            case 35: orderProductStatus = '已打包'; break;
+                                            case 40: orderProductStatus = '已发货'; break;
+                                            case 50: orderProductStatus = '已完成'; break;
+                                        }
+                                        
+                                        var orderStatusMes = '';
+                                        switch (e.orderStatus) {
+                                            case -10: orderStatusMes = '已取消'; break;
+                                            case 0: orderStatusMes = '已提交';  break;
+                                            case 5: orderStatusMes = '待审核'; break;
+                                            case 10: orderStatusMes = '已审核'; break;
+                                            case 20: orderStatusMes = '待分仓'; break;
+                                            case 21: orderStatusMes = '已分仓'; break;
+                                            case 30: orderStatusMes = '待发货'; break;
+                                            case 35: orderStatusMes = '已打包'; break;
+                                            case 40: orderStatusMes = '已发货'; break;
+                                            case 50: orderStatusMes = '已完成'; break;
+                                        }
+
+                                        var trackerStatusMes = '';
+                                        switch (e.trackerStatus) {
+                                            case "pending" : trackerStatusMes =  "查询中";break;
+                                            case "notfound" : trackerStatusMes =  "查询不到";break;
+                                            case "transit" : trackerStatusMes =  "运输途中";break;
+                                            case "pickup" : trackerStatusMes =  "到达待取";break;
+                                            case "delivered" : trackerStatusMes =  "成功签收";break;
+                                            case "undelivered" : trackerStatusMes =  "投递失败";break;
+                                            case "exception" : trackerStatusMes =  "可能异常";break;
+                                            case "expired" : trackerStatusMes =  "运输过久";break;
+                                            case "null" : trackerStatusMes =  "查询超时";break;
+                                        }
+
+                                        var paymentTypeMes = '';
+                                        switch (e.paymentType) {
+                                            case 1 : paymentTypeMes = "货到付款";break;
+                                            case 2 : paymentTypeMes = "paypal";break;
+                                        }
+
+                                        var scopeId = e.orderCode.split('')[1].charCodeAt() - 64;
+                                            scope = {};
+                                        app.data.scopeData.map(function(_e){
+                                            if(_e.id == scopeId){
+                                                scope = _e
+                                            }
+                                        })
+                            
+                                        if(i!=0 && e.orderCode == result.body.content[i-1].orderCode){
+                                            orderCode = '';
+                                            orderFreightPrice = '';
+                                            orderTotalPrice = '';
+                                            lastUpdateTime = '';
+                                            affiliate = '';
+                                            scopeName = '';
+                                            orderSubmitTime = '';
+                                            consignee = '';
+                                            tel = '';
+                                            address = '';
+                                            message = '';
+                                            remark = '';
+                                            email = '';
+                                        }else{
+                                            orderCode = e.orderCode
+                                            orderFreightPrice = e.orderFreightPrice
+                                            orderTotalPrice = e.orderTotalPrice
+                                            orderStatus = orderStatusMes
+                                            lastUpdateTime = e.lastUpdateTime
+                                            affiliate = e.affiliate
+                                            scopeName = scope.name
+                                            orderSubmitTime = e.orderSubmitTime
+                                            consignee = e.consignee
+                                            tel = e.tel
+                                            address = e.city + e.district + e.detail
+                                            message = e.message
+                                            remark = e.remark
+                                            email = e.email
+                                        }
+
+                                        if($('#toolbar select[name=orderStatus]').val() == -10){
+                                            data.push({
+                                                '订单号':orderCode ? orderCode : undefined,
+                                                '产品ID':e.productId,
+                                                '品名':e.productTitle + "（" + e.productSkuName + "）",
+                                                '条形码':e.productSkuBarcode,
+                                                '数量':e.productSkuQuantity,
+                                                '单价':e.price,
+                                                '售价':e.originalPrice,
+                                                '运费':orderFreightPrice ? orderFreightPrice : undefined,
+                                                '总价':orderTotalPrice ? orderTotalPrice : undefined,
+                                                '商品状态':orderProductStatus ? orderProductStatus : undefined,
+                                                '发货仓库':e.warehouseId,
+                                                '发货时间':e.deliveryTime,
+                                                '订单状态':orderStatus ? orderStatus : undefined,
+                                                '支付方式':paymentTypeMes,
+                                                '物流状态':trackerStatusMes,
+                                                '物流时间':e.lastUpdateTime,
+                                                '投放':affiliate ? affiliate : undefined,
+                                                '来源商城':scopeName ? scopeName : undefined,
+                                                '下单时间':orderSubmitTime ? orderSubmitTime : undefined,
+                                                '收件人':consignee ? consignee : undefined,
+                                                '电话':tel ? tel : undefined,
+                                                '地址':address ? address : undefined,
+                                                '邮箱':email ? email : undefined,
+                                                '留言':message ? message : undefined,
+                                                '发货量':e.productDeliveryQuantity,
+                                                '发货单号':e.deliveryCode,
+                                                '国际物流':e.waybillCode,
+                                                '备注':remark ? remark : undefined
+                                            })
+                                        }else{
+                                            orderStatus != '已取消' && data.push({
+                                                '订单号':orderCode ? orderCode : undefined,
+                                                '产品ID':e.productId,
+                                                '品名':e.productTitle + "（" + e.productSkuName + "）",
+                                                '条形码':e.productSkuBarcode,
+                                                '数量':e.productSkuQuantity,
+                                                '单价':e.price,
+                                                '售价':e.originalPrice,
+                                                '运费':orderFreightPrice ? orderFreightPrice : undefined,
+                                                '总价':orderTotalPrice ? orderTotalPrice : undefined,
+                                                '商品状态':orderProductStatus ? orderProductStatus : undefined,
+                                                '发货仓库':e.warehouseId,
+                                                '发货时间':e.deliveryTime,
+                                                '订单状态':orderStatus ? orderStatus : undefined,
+                                                '支付方式':paymentTypeMes,
+                                                '物流状态':trackerStatusMes,
+                                                '物流时间':e.lastUpdateTime,
+                                                '投放':affiliate ? affiliate : undefined,
+                                                '来源商城':scopeName ? scopeName : undefined,
+                                                '下单时间':orderSubmitTime ? orderSubmitTime : undefined,
+                                                '收件人':consignee ? consignee : undefined,
+                                                '电话':tel ? tel : undefined,
+                                                '地址':address ? address : undefined,
+                                                '邮箱':email ? email : undefined,
+                                                '留言':message ? message : undefined,
+                                                '发货量':e.productDeliveryQuantity,
+                                                '发货单号':e.deliveryCode,
+                                                '国际物流':e.waybillCode,
+                                                '备注':remark ? remark : undefined
+                                            })
+                                        }
+                                    });
+                                    console.log(data)
+                                    if(data.length > 0){
+                                        data.unshift(xlsxUtils.readDataHead(data));
+                                        var blob = xlsxUtils.export({ "Sheet1": data });
+                                        saveAs(URL.createObjectURL(blob), "全部订单" + datetimes + ".xlsx");
+                                    }else{
+                                        toastr.error('导出数据为空...');
+                                    }
+                                } else {
+                                    toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                                }
+                            }
+                        });
+                    });
+                },
+                showSearchView: function () {
+                    $('#toolbar .form-inline').toggle()
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-down')
+                    $('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-up')
+                    app.methods.initBootstrapTableStyle();
+                },
+                initBootstrapTableStyle: function(){
+                    $('.panel .panel-body .bootstrap-table').css({
+                        'height':'calc(100% - '+$('#toolbar').outerHeight(true)+'px)'
+                    })
+                    $('.panel .panel-body .bootstrap-table .fixed-table-container').css({
+                        'height':'calc(100% - '+$('.panel .panel-body .bootstrap-table .fixed-table-container .fixed-table-pagination').outerHeight(true)+'px)'
+                    })
+                },
+                searchTable: function () {
+                    app.data.table.bootstrapTable('refresh');
+                },
+                initTable: function () {
+                    var url = '';
+                    var type = utils.getURLParam('type');
+                    if(type){
+                        url = utils.prePath() + '/api/admin/delivery/list?orderStatus=' + type
+                    }else{
+                        url = utils.prePath() + '/api/admin/order/delivery/list'
+                    }
+                    app.data.table.bootstrapTable({
+                        showExport: true,  //是否显示导出按钮  
+                        pagination: true,
+                        cache: false,
+                        sortable: false,
+                        sidePagination: "server",
+                        clickToSelect: true,
+                        templateView: false,
+                        showHeader: true,
+                        pageNumber: 1,
+                        pageSize: 30,
+                        pageList: [30, 60, 90, 120],
+                        toolbarAlign: 'left',
+                        queryParamsType: 'page',
+                        queryParams: function (params) {
+                            params.productSkuBarcode = $('#toolbar input[name=productSkuBarcode]').val().trim();
+                            params.productTitle = $('#toolbar input[name=productTitle]').val().trim();
+                            params.orderCode = $('#toolbar input[name=orderCode]').val().trim();
+                            params.waybillCode = $('#toolbar input[name=expressNum]').val().trim();
+                            var warehouseId = $('#toolbar select[name=warehouse]').select2('val');
+                            if(warehouseId != -1){
+                                params.warehouseId = warehouseId;
+                            }
+                            var orderStatus = $('#toolbar select[name=orderStatus]').val();
+                            if(orderStatus != '全部'){
+                                params.orderStatus = orderStatus;
+                            }
+                            var trackerStatus = $('#toolbar select[name=trackerStatus]').val();
+                            if(trackerStatus != '全部'){
+                                params.trackerStatus = trackerStatus;
+                            }
+                            var paymentType = $('#toolbar select[name=paymentType]').val();
+                            if(paymentType != '全部'){
+                                params.paymentType = paymentType;
+                            }
+                            params.productId = $('#toolbar input[name=productId]').val().trim();
+                            var consignee = $('#toolbar input[name=consignee]').val().trim();
+                            if(consignee){
+                                params.consignee = consignee;
+                            }
+                            var tel = $('#toolbar input[name=tel]').val().trim();
+                            if(tel){
+                                params.tel = tel;
+                            }
+                            var affiliate = $('#toolbar input[name=affiliate]').val();
+                            if(affiliate){
+                                params.affiliate = affiliate.trim();
+                            }
+                            var scopeId = $('#toolbar select[name=scopeId]').select2('val');
+                            params.scopeId = scopeId == -1 ? '' : scopeId ; 
+                            var deliveryCode = $('#toolbar input[name=deliveryCode]').val().trim();
+                            if(deliveryCode){
+                                params.deliveryCode = deliveryCode;
+                            }
+                            var datetimes = $("input[name='datetimes']").val().trim();
+                            var orderSubmitBeginTime = datetimes.split(' - ')[0] || moment().hours(0).minutes(0).format('YYYY/M/D HH:mm');
+                            var orderSubmitEndTime = datetimes.split(' - ')[1] || moment().format('YYYY/M/D HH:mm');
+                            if(orderSubmitBeginTime){
+                                if(moment(orderSubmitBeginTime).get('minute') == 59){
+                                    orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 59).unix();
+                                }else{
+                                    orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 00).unix();
+                                }
+                                if(type == 35){
+                                    // 已打包-打包时间
+                                    params.deliveryBeginTime = orderSubmitBeginTime;
+                                }else{
+                                    params.orderSubmitBeginTime = orderSubmitBeginTime;
+                                }
+                            }
+                            if(orderSubmitEndTime){
+                                if(moment(orderSubmitEndTime).get('minute') == 59){
+                                    orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 59).unix();
+                                }else{
+                                    orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 00).unix();                                    
+                                }
+                                if(type == 35){
+                                    // 已打包-打包时间
+                                    params.deliveryEndTime = orderSubmitEndTime;
+                                }else{
+                                    params.orderSubmitEndTime = orderSubmitEndTime;
+                                }
+                            }
+
+                            var datetimes1 = $("input[name='datetimes1']").val().trim();
+                            var lastUpdateBeginTime = datetimes1.split(' - ')[0];
+                            var lastUpdateEndTime = datetimes1.split(' - ')[1];
+                            if(lastUpdateBeginTime){
+                                if(moment(lastUpdateBeginTime).get('minute') == 59){
+                                    lastUpdateBeginTime = moment(lastUpdateBeginTime).set('second', 59).unix();
+                                }else{
+                                    lastUpdateBeginTime = moment(lastUpdateBeginTime).set('second', 00).unix();
+                                }
+                                params.lastUpdateBeginTime = lastUpdateBeginTime;
+                            }
+                            if(lastUpdateEndTime){
+                                if(moment(lastUpdateEndTime).get('minute') == 59){
+                                    lastUpdateEndTime = moment(lastUpdateEndTime).set('second', 59).unix();
+                                }else{
+                                    lastUpdateEndTime = moment(lastUpdateEndTime).set('second', 00).unix();                                    
+                                }
+                                params.lastUpdateEndTime = lastUpdateEndTime;
+                            }
+
+                            params.size = params.pageSize;
+                            params.page = parseInt(params.pageNumber) - 1;
+                            return params;
+                        },
+                        url: url,
+                        totalField: 'body.totalElements',
+                        dataField: 'body.content',
+                        columns: app.methods.optionByAuthority(),
+                        onLoadSuccess: function (data) {
+							tableUi.initBootstrapTable();
+                            // app.methods.initBootstrapTableStyle();
+                            app.data.orderData = data.body.content;
+                            app.data.totalElements = data.body.totalElements;
+                            
+                            // 根据历史存入的数据渲染,根绝用户习惯渲染指定列,全部订单页
+                            var tableOpt = cacheLocalstorage.getCache('tableOpt')
+                            var type = utils.getURLParam('type');
+                            if(!type && tableOpt){
+                                tableOpt.map(function(e){
+                                    app.data.table.bootstrapTable('hideColumn',e);
+                                })
+                            }
+
+                            // 编辑备注
+                            $('.edit').click(function(){
+                                var _this = this;
+                                var index = $(_this).data('index');
+                                var _h = '';
+                                if(index >= 0){
+                                    _h = app.data.orderData[index].remark
+                                }
+                                layer.prompt({
+                                    title: '修改', 
+                                    value : _h , 
+                                    formType: 2,
+                                    yes:function(index){
+                                        var text = $('#layui-layer'+index).find('textarea').val()
+                                        $.ajax({
+                                            type : "put",
+                                            url : utils.prePath()+"/api/admin/order/" + $(_this).data('orderid'),
+                                            data : JSON.stringify({
+                                                'remark':text
+                                            }),
+                                            success : function(result){
+                                                if(result.statusCode == 'OK'){
+                                                    app.data.table.bootstrapTable('refresh');
+                                                    layer.close(index);
+                                                }else{
+                                                    toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                            })
+                            
+                            var data = data.body.content;
+                            if(data.length == 0){
+                                return false
+                            }
+
+                            //处理图片显示
+                            $('#table-products .thumbnail img').height($('#table-products .thumbnail img').width());
+                            $('[data-toggle="tooltip"]').tooltip();
+
+                            // 订单级合并方案
+                            var mergeData = ["affiliate", "scopeName", "orderCode", "orderSubmitTime", "pubNum", "consignee", "name", "tel", "address", "email", "orderStatus",'noteVal','tools','remark','orderFreightPrice','orderTotalPrice','codPrice']
+                            // 物流级合并方案
+                            var e_mergeData = ["productImageUrl", "productTitle", "productSkuName", "productSkuBarcode", "originalPrice"]
+
+                            // 处理合并显示
+                            // 对比不同的订单号
+                            function findDiff(e, val, _Data) {
+                                var state = true;
+                                for (var i = 0; i < _Data.length; i++) {
+                                    if (e[val] !== _Data[i].data[val]) {
+                                        state = true;
+                                    } else {
+                                        state = false;
+                                        return state;
+                                    }
+                                }
+                                return state;
+                            }
+
+                            var Data = [];
+                            var type = 0;
+                            data.map(function (e, j) {
+                                var isRe = findDiff(e, 'orderCode', Data);
+                                if (j != 0 && isRe) {
+                                    type += 1;
+                                }
+                                Data.push({
+                                    data: e,
+                                    index: j,
+                                    type: type
+                                })
+                            })
+
+                            var _data = [[]];
+                            var _type = 0;
+                            // 根据不同的订单号分组（type），生成新数组
+                            for (var i = 0; i < Data.length; i++) {
+                                if (Data[i].type == _type) {
+                                    _data[_type].push(Data[i])
+                                } else {
+                                    _type += 1;
+                                    _data.push([Data[i]])
+                                }
+                            }
+                            
+                            for (var i = 0; i < _data.length; i++) {
+                                // 给对应的订单级选择增加事件
+                                $('#table-products tbody tr[data-index="' + _data[i][0].index + '"]').find('td').eq(0).find('input').on('click', function () {
+                                    var td = $(this).parent().parent()
+                                    var startNum = td.parent().attr('data-index');
+                                    var length = td.attr('rowspan')
+                                    // 选择对应的商品
+                                    for (var j = 0; j < length; j++) {
+                                        var $this = $('#table-products tbody tr').eq((startNum - 0) + (j - 0)).find('.selectOne').find('input')
+                                        if ($(this).is(':checked')) {
+                                            if (!$this.is(':checked')) {
+                                                $this.click();
+                                            }
+                                        } else {
+                                            if ($this.is(':checked')) {
+                                                $this.click();
+                                            }
+                                        }
+                                    }
+                                })
+
+                                // 计算子集相关数据（物流级）
+                                var expressData = [];
+                                var e_Data = [];
+                                var e_type = 0;
+                                _data[i].map(function (e, j) {
+                                    var e_isRe;
+                                    if (e.data.waybillCode != undefined) {
+                                        e_isRe = findDiff(e.data, 'productSkuBarcode', e_Data);
+                                        if (j != 0 && e_isRe) {
+                                            e_type += 1;
+                                        }
+                                        e_Data.push({
+                                            data: e.data,
+                                            index: e.index,
+                                            type: e_type
+                                        })
+                                    }
+                                })
+
+                                var e_data = [[]];
+                                var e_type = 0;
+                                e_Data.map(function (e, i) {
+                                    if (e.type == e_type) {
+                                        e_data[e_type].push(e)
+                                    } else {
+                                        e_type += 1;
+                                        e_data.push([e]);
+                                    }
+                                })
+                                // // 根据不同的订单号分组（type），生成新数组
+                                for (var k = 0; k < e_data.length; k++) {
+                                    e_mergeData.map(function (e) {
+                                        if (e_data[k].length > 1) {
+                                            $('#table-products').bootstrapTable('mergeCells', {
+                                                index: e_data[k][0].index,
+                                                field: e,
+                                                rowspan: e_data[k].length
+                                            });
+                                        }
+                                    })
+                                }
+                                // 合并表格
+                                mergeData.map(function (e) {
+                                    $('#table-products').bootstrapTable('mergeCells', {
+                                        index: _data[i][0].index,
+                                        field: e,
+                                        rowspan: _data[i].length
+                                    });
+                                })
+                            }
+                        },
+						onLoadError: function(result){
+							if(result == 403){
+								toastr.error("不允许访问")
+							}else{
+								toastr.error('系统异常,请稍候重试或联系开发人员...');
+							}
+                        },
+                        onColumnSwitch: function(){
+                            var optData = app.data.table.bootstrapTable('getHiddenColumns');
+                            var opt = [];
+                            optData.map(function(e){
+                                opt.push(e.field)
+                            })
+                            cacheLocalstorage.setCache('tableOpt',opt)
+                        }
+                    });
+                },
+                preview : function(id){
+					layer.open({
+					  	type: 2,
+					  	title: '产品预览',
+					  	maxmin : true,
+					  	shadeClose: true,
+					  	resize : false,	
+					  	shade: 0.8,
+                        area: ['392px', '710px'],
+                        skin:'preview',  
+					  	content: utils.perviewPath(id)
+					});
+				},
+                optionByAuthority: function () {
+                    var type = utils.getURLParam('type');
+                    var orderCode,
+                        productId,
+                        productImageUrl,
+                        productTitle,
+                        productSkuBarcode,
+                        productSkuQuantity,
+                        price,
+                        originalPrice,
+                        productDeliveryQuantity,
+                        deliveryCode,
+                        waybillCode,
+                        trackerStatus,
+                        orderFreightPrice,
+                        orderTotalPrice,
+                        orderProductStatus,
+                        warehouseId,
+                        deliveryTime,
+                        orderStatus,
+                        paymentType,
+                        affiliate,
+                        orderSubmitTime,
+                        consignee,
+                        tel,
+                        address,
+                        noteVal,
+                        remark,
+                        tools,
+                        email,
+                        scopeName;
+                    
+                    orderCode = {
+                        field: 'orderCode',
+                        title: '訂單號',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    };
+                    productId = {
+                        field: 'productId',
+                        title: '產品ID',
+                        align: 'center',
+                        width: 60,
+                        minWidth: 60,
+                        formatter: function (value, row, index, field) {
+                            var scopeId = row.orderCode.split('')[1].charCodeAt() - 64;
+                                scopeLink = '',
+                                link = '';
+                            for(var i = 0;i < app.data.scopeData.length;i++){
+                                if(app.data.scopeData[i].id == scopeId){
+                                    scopeLink = app.data.scopeData[i].domains
+                                }
+                            }
+                            link = 'http://' + scopeLink + '/product/index.html?id=' + value
+                            if(row.pixelId){
+                                link += '&pixelId=' + row.pixelId
+                            }
+                            if(row.affiliate){
+                                link += '&affiliate=' + row.affiliate
+                            }
+                            return '<a style="text-decoration: underline;" target="_blank" href="' + link + '">' + (value || '--') + '</a>';
+                        }
+                    };
+                    productImageUrl = {
+                        field: 'productImageUrl',
+                        title: '商品圖',
+                        align: 'center',
+                        width: 60,
+                        minWidth: 60,
+                        formatter: function (value, row, index, field) {
+							return '<a href="#" onclick = "app.methods.preview('+row.productId+');"><img src="'+value+'" alt="'+row.productTitle+'" class="img-responsive proImage"></a>';
+                        }
+                    };
+                    productTitle = {
+                        field: 'productTitle',
+                        title: '品名',
+                        minWidth: 200,
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value + '（'+row.productSkuName+'）' || '--') + '</span>';
+                        }
+                    }
+                    productSkuBarcode = {
+                        field: 'productSkuBarcode',
+                        title: '條碼',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }
+                    productSkuQuantity = {
+                        field: 'productSkuQuantity',
+                        title: '數量',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }
+                    price = {
+                        field: 'price',
+                        title: '單價',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var isAllOrder = !utils.getURLParam('type');
+                            if(isAllOrder && row.orderProductStatus <= 30  && row.orderProductStatus >= 0){
+                                return '<span class="simpleBtn" href="#" onclick="app.methods.editPrice(' + row.id + ',' + value + ')">'+value+'</span>';
+                            }else{
+                                return '<span class="text-length-table-col">' + value + '</span>';
+                            }
+                        }
+                    }
+                    originalPrice = {
+                        field: 'originalPrice',
+                        title: '售價',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + value + '</span>';
+                        }
+                    }
+                    productDeliveryQuantity = {
+                        field: 'productDeliveryQuantity',
+                        title: '發貨量',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }
+                    deliveryCode = {
+                        field: 'deliveryCode',
+                        title: '發貨單號',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }
+                    waybillCode = {
+                        field: 'waybillCode',
+                        title: '國際物流',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            if(value){
+                                return '<span class="text-length-table-col">' + value + '</span>'+
+                                '<a class="simpleBtn" href="#" onclick="app.methods.updateTracker(' + index + ')">更新物流</a>';
+                            }else{
+                                return '<span class="text-length-table-col">--</span>'
+                            }
+                        }
+                    }
+                    trackerStatus = {
+                        field: 'trackerStatus',
+                        title: '物流資訊',
+                        minWidth: 120,
+                        formatter: function (value, row, index, field) {
+                            var stateVal = '';
+                            switch(value){
+                                case "pending" : stateVal =  "査詢中";break;
+                                case "notfound" : stateVal =  "査詢不到";break;
+                                case "transit" : stateVal =  "運輸途中";break;
+                                case "pickup" : stateVal =  "到達待取";break;
+                                case "delivered" : stateVal =  "成功簽收";break;
+                                case "undelivered" : stateVal =  "投遞失敗";break;
+                                case "exception" : stateVal =  "可能异常";break;
+                                case "expired" : stateVal =  "運輸過久";break;
+                                case "null" : stateVal =  "查询超时";break;
+                            }
+                            return ('<div onclick="app.methods.openTracker('+index+')">'+
+                                '<p class="label label-default">' + (stateVal || '--') + '</p>'+
+                                '<p style="margin-left: 4px;" class="label label-info">' + (row.lastUpdateTime || '--') + '</p>'+
+                                '<p style="margin: 6px 0;">' + (row.lastEvent || '--') + '</p>'+
+                                '</div>');
+                        }
+                    }
+                    orderFreightPrice = {
+                        field: 'orderFreightPrice',
+                        title: '運費',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            var isAllOrder = !utils.getURLParam('type');
+                            if(isAllOrder && row.orderProductStatus <= 30  && row.orderProductStatus >= 0){
+                                return '<span class="simpleBtn" href="#" onclick="app.methods.editFreightPrice(' + row.orderId + ',' + value + ')">'+value+'</span>';
+                            }else{
+                                return '<span class="text-length-table-col">' + value + '</span>';
+                            }
+                        }
+                    }
+                    if(type){
+                        orderTotalPrice = {
+                            field: 'codPrice',
+                            title: '發貨單總價 | 应收',
+                            align: 'center',
+                            formatter: function (value, row, index, field) {
+                                var html = '<span>' + value + '</span> | ';
+                                if(row.paymentType == 1){
+                                    html += '<span style="color:#ff2b2b;font-weight:700;">' + value + '</span>';
+                                }else if(row.paymentType == 2){
+                                    html += '<span style="color:#ff2b2b;font-weight:700;">0</span>';
+                                }
+                                return html;
+                            }
+                        }
+                    }else{
+                        orderTotalPrice = {
+                            field: 'orderTotalPrice',
+                            title: '總價',
+                            align: 'center',
+                            formatter: function (value, row, index, field) {
+                                return '<span class="text-length-table-col">' + value + '</span>';
+                            }
+                        }
+                    }
+                    orderProductStatus = {
+                        field: 'orderProductStatus',
+                        title: '商品狀態',
+                        minWidth: 80,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            // -10:已取消, 0:已提交, 5:待审核, 10:已审核, 20:待分仓, 21:已分仓 30:待发货, 35:已打包, 40:已发货，50:已完成
+                            //  不确定是否存在 25:发货排队
+                            var mes = '--',
+                                stateColor = '';
+                            switch (value) {
+                                case -10: mes = '已取消';stateColor = 'label-default';break;
+                                case 0: mes = '已提交';stateColor = 'label-info';break;
+                                case 5: mes = '待稽核';stateColor = 'label-warning';break;
+                                case 10: mes = '已稽核';stateColor = 'label-info';break;
+                                case 20: mes = '待分倉';stateColor = 'label-warning';break;
+                                case 21: mes = '已分倉';stateColor = 'label-info';break;
+                                case 25: mes = '發貨排隊';stateColor = 'label-primary';break;
+                                case 30: mes = '待發貨';stateColor = 'label-danger';break;
+                                case 35: mes = '已打包';stateColor = 'label-success';break;
+                                case 40: mes = '已發貨';stateColor = 'label-success';break;
+                                case 50: mes = '已完成';stateColor = 'label-primary';break;
+                            }
+                            return '<span class="label ' + stateColor + '">' + mes + '</span>';
+                        }
+                    }
+                    warehouseId = {
+                        field: 'warehouseId',
+                        title: '發貨倉庫',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var wDom = '';
+                            for(var i=0;i<app.data.warehouseData.length;i++){
+                                if(app.data.warehouseData[i].id == row.warehouseId){
+                                    wDom = app.data.warehouseData[i].text;
+                                    break;
+                                }
+                            }
+                            return '<span class="text-length-table-col">' + wDom + '</span>';
+                        }
+                    }
+                    deliveryTime = {
+                        field: 'deliveryTime',
+                        title: '發貨時間',
+                        minWidth: 100,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            if(!value){
+                                return '';
+                            }
+                            var time = moment(value.split(' ')[0] + ' ' + value.split(' ')[1]).format('YYYY-MM-DD HH:mm:ss');
+                            return '<span class="text-length-table-col">' + time + '</span>';
+                        }
+                    }
+                    orderStatus = {
+                        field: 'orderStatus',
+                        title: '訂單狀態',
+                        minWidth: 80,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            // -10:已取消, 0:已提交, 5:待审核, 10:已审核, 20:待分仓, 21:已分仓 30:待发货, 35:已打包, 40:已发货，50:已完成
+                            var mes = '--',
+                                stateColor = '';
+                            switch (value) {
+                                case -10: mes = '已取消';stateColor = 'label-default';break;
+                                case 0: mes = '已提交';stateColor = 'label-info';break;
+                                case 5: mes = '待稽核';stateColor = 'label-warning';break;
+                                case 10: mes = '已稽核';stateColor = 'label-info';break;
+                                case 20: mes = '待分倉';stateColor = 'label-warning';break;
+                                case 21: mes = '已分倉';stateColor = 'label-info';break;
+                                case 30: mes = '待發貨';stateColor = 'label-danger';break;
+                                case 35: mes = '已打包';stateColor = 'label-success';break;
+                                case 40: mes = '已發貨';stateColor = 'label-success';break;
+                                case 50: mes = '已完成';stateColor = 'label-primary';break;
+                            }
+                            return '<span class="label ' + stateColor + '">' + mes + '</span>';
+                        }
+                    }
+                    paymentType= {
+                        field: 'paymentType',
+                        title: '支付方式',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var typeVal = '';
+                            switch(value){
+                                case 1: typeVal = "到付";break;
+                                case 2: typeVal = "PayPal";break;
+                            }
+                            return '<span class="text-length-table-col">' + typeVal + '</span>';
+                        }
+                    }
+                    affiliate = {
+                        field: 'affiliate',
+                        title: '投放',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }
+                    scopeName = {
+                        field: 'scopeName',
+                        title: '來源商城',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var scopeId = row.orderCode.split('')[1].charCodeAt() - 64;
+                                scope = {};
+                            app.data.scopeData.map(function(e){
+                                if(e.id == scopeId){
+                                    scope = e
+                                }
+                            })
+                            return '<span class="text-length-table-col">' + (scope.name || '--') + '</span>';
+                        }
+                    }
+                    orderSubmitTime = {
+                        field: 'orderSubmitTime',
+                        title: '下單時間',
+                        minWidth: 90,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var time = moment(value.split(' ')[0] + ' ' + value.split(' ')[1]).format('YYYY-MM-DD HH:mm:ss');
+                            return '<span class="text-length-table-col">' + time + '</span>';
+                        }
+                    }
+                    consignee = {
+                        field: 'consignee',
+                        title: '收件人',
+                        minWidth: 80,
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            var isAllOrder = !utils.getURLParam('type');
+                            var consignee = "'"+row.consignee+"'",
+                                tel = "'"+row.tel+"'",
+                                city = "'"+row.city+"'",
+                                district = "'"+row.district+"'",
+                                detail = "'"+row.detail+"'";
+                            if(isAllOrder){
+                                // return '<a class="simpleBtn" href="#" onclick="app.methods.editCustomerInfo(' + consignee + ',' + tel + ',' + city + ',' + district + ',' + detail + ',' + row.orderId + ')">'+value+'</a>';
+                                return '<a class="simpleBtn" href="#" onclick="app.methods.editCustomerInfo(' + index + ')">'+value+'</a>';
+                            }else{
+                                return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                            }
+                        }
+                    }
+                    tel = {
+                        field: 'tel',
+                        title: '電話',
+                        align: 'center',
+                        formatter: function (value, row, index, field) {
+                            return '<span class="text-length-table-col">' + (value || '--') + '</span>';
+                        }
+                    }
+                    address = {
+                        field: 'address',
+                        title: '地址',
+                        minWidth: 172,
+                        formatter: function (value, row, index, field) {
+                            var noteVal = (row.city + row.district + row.detail) || '';
+                            return '<span class="text-length-table-col">' + (noteVal || '--') + '</span>';
+                        }
+                    }
+                    noteVal = {
+                        field: 'noteVal',
+                        title: '留言',
+                        minWidth: 120,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var maxLength = 12;
+                            var noteVal = row.message || '';
+                            if (noteVal.split('').length > maxLength) {
+                                return '<a class="simpleBtn" href="#" onclick="app.methods.showNoteVal(' + index + ')">' + noteVal.slice(0, maxLength + 1) +'</a>';
+                            } else {
+                                return '<span>' + (noteVal || '--') + '</span>';
+                            }
+                        }
+                    }
+                    remark = {
+                        field: 'remark',
+                        title: '備註',
+                        minWidth: 150,
+                        formatter: function (value, row, index) {
+                            var isAllOrder = !utils.getURLParam('type');
+                            return '<span data-orderid="' + row.orderId + '" data-index="' + index + '" class="text-length-table-col ' + (isAllOrder ? 'edit' : '') + '">' + (row.remark || '--') + '</span>';
+                        }
+                    }
+                    tools = {
+                        field: 'tools',
+                        title: '操作',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            var id = row.orderId;
+                            if(row.orderStatus == -10 || row.orderStatus >=31){
+                                return '';
+                            }
+                            return '<button type="button" class="btn btn-danger btn-sm" onclick="app.methods.cancelOrder(' + id + ')">取消訂單</button>'
+                        }
+                    }
+
+                    email = {
+                        field: 'email',
+                        title: '郵箱',
+                        align: 'center',
+                        width: 80,
+                        formatter: function (value, row, index, field) {
+                            return '<span style="word-wrap: break-word;width: 84px;display: block;">' + (value || '--') + '</span>';
+                        }
+                    }
+
+                    var option = [];
+                    if(/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)){
+                        option.push(orderCode,productId,productTitle,productSkuQuantity,price,orderTotalPrice);
+                        if(!type){
+                            option.push(affiliate,scopeName);
+                        }
+                        option.push(consignee,remark,orderSubmitTime);
+                    }else{
+                        option.push(orderCode,productId,productImageUrl,productTitle,productSkuBarcode,productSkuQuantity,price,originalPrice,orderFreightPrice,orderTotalPrice,orderProductStatus,warehouseId,deliveryTime,orderStatus);
+                        if(!type){
+                            option.push(paymentType,affiliate,scopeName);
+                        }
+                        option.push(orderSubmitTime,consignee,tel,address,email,noteVal,productDeliveryQuantity,deliveryCode,waybillCode);
+                        if(!type){
+                            option.push(trackerStatus);
+                        }
+                        option.push(remark);                        
+                    }
+                    if(!type){
+                        option.push(tools);
+                    }
+                    return option;
+                },
+                editPrice: function(id, price){
+                    layer.prompt({
+						title: '修改购买单价（NT$）',
+						value: price,
+						formType: 3
+					}, function (text,index) {
+						$.ajax({
+							type: "PUT",
+							url: utils.prePath() + "/api/admin/order/product/" + id + "/price",
+							data: JSON.stringify({
+								"price": text
+							}), 
+							success: function (result) {
+								if (result.statusCode == 'OK') {
+									layer.close(index)
+									app.data.table.bootstrapTable('refresh');
+								} else {
+									toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+								}
+							}
+						});
+					});
+                },
+                editFreightPrice: function(orderId, freight){
+                    layer.prompt({
+						title: '修改订单运费（NT$）',
+						value: freight,
+						formType: 3
+					}, function (text,index) {
+						$.ajax({
+							type: "PUT",
+							url: utils.prePath() + "/api/admin/order/" + orderId + "/freight",
+							data: JSON.stringify({
+								"freight": text
+							}), 
+							success: function (result) {
+								if (result.statusCode == 'OK') {
+									layer.close(index)
+									app.data.table.bootstrapTable('refresh');
+								} else {
+									toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+								}
+							}
+						});
+					});
+                },
+                updateTracker: function(index){
+                    $.ajax({
+                        type: "POST",
+                        url: utils.prePath() + "/api/admin/order/tracker",
+                        data: JSON.stringify({
+                            tracking_number: app.data.orderData[index].waybillCode,
+                            order_id: app.data.orderData[index].orderCode,
+                            destination_code: app.data.orderData[index].deliveryCode
+                        }),
+                        success: function (result) {
+                            if (result.statusCode == 'OK') {
+                                app.data.table.bootstrapTable('refresh');
+                            } else {
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    });
+                },
+                openTracker: function(index){
+                    $.ajax({
+                        type: "GET",
+                        url: utils.prePath() + "/api/admin/order/tracker/" + app.data.orderData[index].waybillCode,
+                        success: function (result) {
+                            if (result.statusCode == 'OK') {
+                                var stateVal = '';
+                                switch(result.body.status){
+                                    case "pending" : stateVal =  "查询中";break;
+                                    case "notfound" : stateVal =  "查询不到";break;
+                                    case "transit" : stateVal =  "运输途中";break;
+                                    case "pickup" : stateVal =  "到达待取";break;
+                                    case "delivered" : stateVal =  "成功签收";break;
+                                    case "undelivered" : stateVal =  "投递失败";break;
+                                    case "exception" : stateVal =  "可能异常";break;
+                                    case "expired" : stateVal =  "运输过久";break;
+                                    case "null" : stateVal =  "查询超时";break;
+                                }
+                                var trackVal = [];
+                                result.body.originInfo && JSON.parse(result.body.originInfo).trackinfo && JSON.parse(result.body.originInfo).trackinfo.map(function(e){
+                                    var d = e;
+                                    switch(e.checkpoint_status){
+                                        case "pending" : d.checkpoint_status =  "查询中";break;
+                                        case "notfound" : d.checkpoint_status =  "查询不到";break;
+                                        case "transit" : d.checkpoint_status =  "运输途中";break;
+                                        case "pickup" : d.checkpoint_status =  "到达待取";break;
+                                        case "delivered" : d.checkpoint_status =  "成功签收";break;
+                                        case "undelivered" : d.checkpoint_status =  "投递失败";break;
+                                        case "exception" : d.checkpoint_status =  "可能异常";break;
+                                        case "expired" : d.checkpoint_status =  "运输过久";break;
+                                        case "null" : d.checkpoint_status =  "查询超时";break;
+                                    }
+                                    trackVal.push(d)
+                                })
+                                var index = layer.open({
+                                    type: 1,
+                                    content: template('trackerInfo', {
+                                        trackingNumber : result.body.trackingNumber,  //国际物流单号
+                                        carrierCode : result.body.carrierCode,  //运营商代码
+                                        orderCode : result.body.orderCode,  //订单号
+                                        destinationCode : result.body.destinationCode,  //包裹号
+                                        status : stateVal,  //包裹状态
+                                        trackinfo : trackVal  //货运详情
+                                    }),
+                                    area: ['600px', 'auto'],
+                                    title: '查看货运详情',
+                                    skin: 'trackerInfoBox',
+                                    closeBtn: 1
+                                });
+                                app.data.openId = index;
+                            } else {
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    });
+                },
+                editCustomerInfo: function(index){
+                    var _index = layer.open({
+                        type: 1,
+                        content: template('customerInfo', {
+                            data: app.data.orderData[index],
+                            index: index
+                        }),
+                        area: ['400px', 'auto'],
+                        title: '编辑订单' + app.data.orderData[index].orderCode + '收件信息',
+                        skin:'customerInfo',
+                        closeBtn: 1
+                    });
+                    app.data.openId = _index;
+                },
+                easyBuy: function(index){
+                    var address = {
+						userame: $('div.customerInfoForm input[name="consignee"]').val().trim(),
+						phone: $('div.customerInfoForm input[name="tel"]').val().trim(),
+						adressDetails: $('div.customerInfoForm input[name="detail"]').val().trim(),
+						email: app.data.orderData[index].email,
+                        district : $('div.customerInfoForm input[name="district"]').val().trim(),
+                        city : $('div.customerInfoForm input[name="city"]').val().trim(),
+                    }
+                    var params = '?consignee=' + escape(address.userame) + '&tel=' + escape(address.phone) + '&detail=' + escape(address.adressDetails) + '&email=' + escape(address.email) + '&district=' + escape(address.district) + '&city=' + escape(address.city);
+                    var link = '';
+                    app.data.scopeData.map(function(e){
+                        if(e.id == app.data.orderData[index].scopeId){
+                            link = e.domains
+                        }
+                    })
+                    window.open('http://'+link+'/shopcart/orderConfirm.html' + params)
+                },
+                submitCustomInfo: function(orderId){
+                    var customerInfo = {
+                        consignee : $('div.customerInfoForm input[name="consignee"]').val().trim(),
+                        tel : $('div.customerInfoForm input[name="tel"]').val().trim(),
+                        city : $('div.customerInfoForm input[name="city"]').val().trim(),
+                        district : $('div.customerInfoForm input[name="district"]').val().trim(),
+                        detail : $('div.customerInfoForm input[name="detail"]').val().trim(),
+                    }
+                    $.ajax({
+                        type: "put",
+                        url: utils.prePath() + "/api/admin/order/address/"+orderId,
+                        data: JSON.stringify(customerInfo),
+                        success: function (result) {
+                            if (result.statusCode == 'OK') {
+                                toastr.success((result.body && result.body.message) ? result.body.message : '收件信息修改成功...');
+                                app.data.table.bootstrapTable('refresh');
+                            } else {
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    });
+                    layer.close(app.data.openId);
+                },
+                cancelOrder: function(id){
+                    layer.confirm('取消订单不可逆，请确认...', {
+                        icon: 5,
+                        title:'取消订单提示'
+                    }, function(index){
+                        $.ajax({
+                            type: "put",
+                            url: utils.prePath() + "/api/admin/order/"+id+"/cancel",
+                            success: function (result) {
+                                if (result.statusCode == 'OK') {
+                                    toastr.success((result.body && result.body.message) ? result.body.message : '订单取消成功...');
+                                    app.data.table.bootstrapTable('refresh');
+                                } else {
+                                    toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                                }
+                            }
+                        });
+                        layer.close(index);
+                    });
+                },
+                showNoteVal: function (index) {
+                    layer.alert(app.data.orderData[index].message);
+                },
+                showRemark: function (index) {
+                    layer.alert(app.data.orderData[index].remark);
+                },
+                showNote: function (detail) {
+                    layer.alert(detail);
+                },
+                initSelect2: function () {
+                    // 接收仓库选择器
+                    $.ajax({
+                        type: "get",
+                        url: utils.prePath() + "/api/admin/warehouse/list",
+                        async: false,
+                        success: function (result) {
+                            if (result.statusCode == 'OK') {
+                                var data = [{
+                                    id: -1,
+                                    text: '全部仓库',                                    
+                                }];
+                                result.body.map(function (e) {
+                                    data.push({
+                                        id: e.id,
+                                        text: e.warehouseName,
+										username: e.username
+                                    })
+                                })
+                                $('select[name="warehouse"]').select2({
+                                    data: data,
+                                    placeholder: "选择接收仓库",
+                                    allowClear: true,
+                                    width:'100%'
+                                });
+                                app.data.warehouseData = data;
+                            } else {
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    });
+
+                    $.ajax({
+                        type : "GET",
+                        url : utils.prePath()+"/api/admin/scope/list",
+                        async : false,
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                var data = [{
+                                    id: -1,
+                                    text: '全部商城',                                    
+                                }];
+                                result.body.content.map(function (e) {
+                                    data.push({
+                                        id: e.id,
+                                        text: e.name,
+                                    })
+                                })
+                                $('select[name="scopeId"]').select2({
+                                    data: data,
+                                    placeholder: "选择来源商城",
+                                    allowClear: true,
+                                    width:'100%'
+                                });
+                                // $('select[name="scopeId"]').val('').trigger('change')
+                                app.data.scopeData = result.body.content;
+                            }else{
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    })
+                },
+                initDatePicker(){
+                    if(/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)){
+                        $('input[name="datetimes"]').select2({
+                            data: [{
+                                id:moment().hours(0).minutes(0).format('YYYY/M/D HH:mm') + ' - ' + moment().format('YYYY/M/D HH:mm'),
+                                text:'今天'
+                            },{
+                                id:moment().subtract(1, 'days').hours(0).minutes(0).format('YYYY/M/D HH:mm') + ' - ' + moment().hours(0).minutes(0).format('YYYY/M/D HH:mm'),
+                                text:'昨天'
+                            },{
+                                id:moment().subtract(1, 'days').hours(0).minutes(0).format('YYYY/M/D HH:mm') + ' - ' + moment().subtract(1, 'days').format('YYYY/M/D HH:mm'),
+                                text:'环比昨天'
+                            },{
+                                id:moment().day('Monday').hours(0).minutes(0).format('YYYY/M/D HH:mm') + ' - ' + moment().format('YYYY/M/D HH:mm'),
+                                text:'本周'
+                            },{
+                                id:moment().date(1).hours(0).minutes(0).format('YYYY/M/D HH:mm') + ' - ' + moment().format('YYYY/M/D HH:mm'),
+                                text:'本月'
+                            }],
+                            placeholder: "选择时间",
+                            width:'100%'
+                        })
+                    }else{
+                        $('input[name="datetimes"]').daterangepicker({
+                            "timePicker": true,
+                            "timePicker24Hour": true,
+                            "startDate": moment().subtract(7, 'days').hours(0).minutes(0),
+                            "endDate": moment(),
+                            "locale": {
+                                "format": 'YYYY-MM-DD HH:mm',
+                            }
+                        });
+                    }
+                    $('input[name="datetimes1"]').daterangepicker({
+                        "timePicker": true,
+                        "timePicker24Hour": true,
+                        "locale": {
+                            "format": 'YYYY-MM-DD HH:mm',
+                        }
+                    }).val('');
+                },
+                updateTrackerAll: function(){
+                    var params = {};
+                    params.productSkuBarcode = $('#toolbar input[name=productSkuBarcode]').val().trim();
+                    params.productTitle = $('#toolbar input[name=productTitle]').val().trim();
+                    params.orderCode = $('#toolbar input[name=orderCode]').val().trim();
+                    params.waybillCode = $('#toolbar input[name=expressNum]').val().trim();
+                    var warehouseId = $('#toolbar select[name=warehouse]').select2('val');
+                    if(warehouseId != -1){
+                        params.warehouseId = warehouseId;
+                    }
+                    var orderStatus = $('#toolbar select[name=orderStatus]').val();
+                    if(orderStatus != '全部'){
+                        params.orderStatus = orderStatus;
+                    }
+                    var trackerStatus = $('#toolbar select[name=trackerStatus]').val();
+                    if(trackerStatus != '全部'){
+                        params.trackerStatus = trackerStatus;
+                    }
+                    var paymentType = $('#toolbar select[name=paymentType]').val();
+                    if(paymentType != '全部'){
+                        params.paymentType = paymentType;
+                    }
+                    params.productId = $('#toolbar input[name=productId]').val().trim();
+                    var consignee = $('#toolbar input[name=consignee]').val().trim();
+                    if(consignee){
+                        params.consignee = consignee;
+                    }
+                    var tel = $('#toolbar input[name=tel]').val().trim();
+                    if(tel){
+                        params.tel = tel;
+                    }
+                    var affiliate = $('#toolbar input[name=affiliate]').val();
+                    if(affiliate){
+                        params.affiliate = affiliate.trim();
+                    }
+                    var scopeId = $('#toolbar select[name=scopeId]').select2('val');
+                    params.scopeId = scopeId == -1 ? '' : scopeId ; 
+                    var deliveryCode = $('#toolbar input[name=deliveryCode]').val().trim();
+                    if(deliveryCode){
+                        params.deliveryCode = deliveryCode;
+                    }
+                    var datetimes = $("input[name='datetimes']").val().trim();
+                    var orderSubmitBeginTime = datetimes.split(' - ')[0] || moment().hours(0).minutes(0).format('YYYY/M/D HH:mm');
+                    var orderSubmitEndTime = datetimes.split(' - ')[1] || moment().format('YYYY/M/D HH:mm');
+                    if(orderSubmitBeginTime){
+                        if(moment(orderSubmitBeginTime).get('minute') == 59){
+                            orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 59).unix();
+                        }else{
+                            orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 00).unix();
+                        }
+                        params.orderSubmitBeginTime = orderSubmitBeginTime;
+                    }
+                    if(orderSubmitEndTime){
+                        if(moment(orderSubmitEndTime).get('minute') == 59){
+                            orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 59).unix();
+                        }else{
+                            orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 00).unix();                                    
+                        }
+                        params.orderSubmitEndTime = orderSubmitEndTime;
+                    }
+
+                    var datetimes1 = $("input[name='datetimes1']").val().trim();
+                    var lastUpdateBeginTime = datetimes1.split(' - ')[0];
+                    var lastUpdateEndTime = datetimes1.split(' - ')[1];
+                    if(lastUpdateBeginTime){
+                        if(moment(lastUpdateBeginTime).get('minute') == 59){
+                            lastUpdateBeginTime = moment(lastUpdateBeginTime).set('second', 59).unix();
+                        }else{
+                            lastUpdateBeginTime = moment(lastUpdateBeginTime).set('second', 00).unix();
+                        }
+                        params.lastUpdateBeginTime = lastUpdateBeginTime;
+                    }
+                    if(lastUpdateEndTime){
+                        if(moment(lastUpdateEndTime).get('minute') == 59){
+                            lastUpdateEndTime = moment(lastUpdateEndTime).set('second', 59).unix();
+                        }else{
+                            lastUpdateEndTime = moment(lastUpdateEndTime).set('second', 00).unix();                                    
+                        }
+                        params.lastUpdateEndTime = lastUpdateEndTime;
+                    }
+                    $.ajax({
+                        type : "PUT",
+                        url : utils.prePath()+"/api/admin/order/tracker/update",
+                        data : JSON.stringify(params),
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                toastr.success('后台更新中，请稍后重试，预计时间' + result.body + '秒...');
+                                app.data.table.bootstrapTable('refresh')
+                            }else{
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    })
+                },
+                downloadExcel: function () {
+                    var params = '';
+                    var productSkuBarcode = $('#toolbar input[name=productSkuBarcode]').val().trim(),
+                        productTitle = $('#toolbar input[name=productTitle]').val().trim(),
+                        orderCode = $('#toolbar input[name=orderCode]').val().trim(),
+                        waybillCode = $('#toolbar input[name=expressNum]').val().trim(),
+                        productId = $('#toolbar input[name=productId]').val().trim(),
+                        warehouseId = $('#toolbar select[name=warehouse]').select2('val'),
+                        consignee = $('#toolbar input[name=consignee]').val().trim(),
+                        tel = $('#toolbar input[name=tel]').val().trim(),
+                        deliveryCode = $('#toolbar input[name=deliveryCode]').val().trim();
+                    if(productSkuBarcode){
+                        params += '&productSkuBarcode=' + productSkuBarcode;
+                    }
+                    if(productTitle){
+                        params += '&productTitle=' + productTitle;
+                    }
+                    if(orderCode){
+                        params += '&orderCode=' + orderCode;
+                    }
+                    if(waybillCode){
+                        params += '&waybillCode=' + waybillCode;
+                    }
+                    if(productId){
+                        params += '&productId=' + productId;
+                    }
+                    if(warehouseId != -1){
+                        params += '&warehouseId=' + warehouseId;
+                    }
+                    if(consignee){
+                        params += '&consignee=' + consignee;
+                    }
+                    if(tel){
+                        params += '&tel=' + tel;
+                    }
+                    if(deliveryCode){
+                        params += '&deliveryCode=' + deliveryCode;
+                    }
+                    var datetimes = $("input[name='datetimes']").val().trim();
+                    var orderSubmitBeginTime = datetimes.split(' - ')[0];
+                    var orderSubmitEndTime = datetimes.split(' - ')[1];
+                    if(orderSubmitBeginTime){
+                        if(moment(orderSubmitBeginTime).get('minute') == 59){
+                            orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 59).unix();
+                        }else{
+                            orderSubmitBeginTime = moment(orderSubmitBeginTime).set('second', 00).unix();
+                        }
+                        params += '&deliveryBeginTime=' + orderSubmitBeginTime;
+                    }
+                    if(orderSubmitEndTime){
+                        if(moment(orderSubmitEndTime).get('minute') == 59){
+                            orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 59).unix();
+                        }else{
+                            orderSubmitEndTime = moment(orderSubmitEndTime).set('second', 00).unix();                                    
+                        }
+                        params += '&deliveryEndTime=' + orderSubmitEndTime;
+                    }
+
+                    var datetimes1 = $("input[name='datetimes1']").val().trim();
+                    var lastUpdateBeginTime = datetimes1.split(' - ')[0];
+                    var lastUpdateEndTime = datetimes1.split(' - ')[1];
+                    if(lastUpdateBeginTime){
+                        if(moment(lastUpdateBeginTime).get('minute') == 59){
+                            lastUpdateBeginTime = moment(lastUpdateBeginTime).set('second', 59).unix();
+                        }else{
+                            lastUpdateBeginTime = moment(lastUpdateBeginTime).set('second', 00).unix();
+                        }
+                        params += '&lastUpdateBeginTime=' + lastUpdateBeginTime;
+                    }
+                    if(lastUpdateEndTime){
+                        if(moment(lastUpdateEndTime).get('minute') == 59){
+                            lastUpdateEndTime = moment(lastUpdateEndTime).set('second', 59).unix();
+                        }else{
+                            lastUpdateEndTime = moment(lastUpdateEndTime).set('second', 00).unix();                                    
+                        }
+                        params += '&lastUpdateEndTime=' + lastUpdateEndTime;
+                    }
+
+                    window.open(utils.prePath() + "/api/admin/delivery/export?access_token="+utils.cookie.getCookie('accessToken') + params);
+                },
+                initUpload: function () {
+                    var uploaderUpload = new plupload.Uploader({
+                        runtimes: 'html5,html4',
+                        browse_button: 'uploadExcel',
+                        url: utils.prePath() + "/api/admin/delivery/import",
+                        file_data_name: 'file',
+                        filters: {
+                            max_file_size: '1024KB',
+                            mime_types: [
+                                { title: "Excel files", extensions: "xls,xlsx" }
+                            ],
+                        },
+                        multipart_params: {
+                            access_token: utils.cookie.getCookie('accessToken')
+                        },
+                        init: {
+                            FilesAdded: function (up, files) {
+                                up.start();
+                            },
+                            UploadComplete: function (up, files) {
+                                toastr.success('表格上传完成');
+                            },
+                            Error: function (up, err) {
+                                toastr.error(JSON.parse(err.response).body.message);
+                            }
+                        }
+                    });
+                    uploaderUpload.init();
+                },
+                initToolbar: function(){
+					// TODO
+					// 临时处理权限
+                    var type = utils.getURLParam('type');
+                    if(type){
+                        var role = utils.cookie.getCookie('roles')[0];
+                        if(role == '库管'){
+                            var user_warehouse_id;
+                            app.data.warehouseData.map(function(e){
+                                if(e.username == utils.cookie.getCookie('username')){
+                                    user_warehouse_id = e.id;
+                                }
+                            })
+                            $('select[name="warehouse"]').val(user_warehouse_id).trigger('change')
+                            $('select[name="warehouse"]').next().hide()
+                        }
+                    }
+                },
+                enterKey : function(){
+					$('#toolbar').keyup(function(event){
+					  	if(event.keyCode ==13){
+					    	app.methods.searchTable();
+					  	}
+					});
+                },
+                initShow(){
+                    var type = utils.getURLParam('type');
+                    if(type){
+                        if(type == 35){
+                            $('.panel-title').text('已打包');
+                            $('#uploadExcel').remove();
+                            $('#excelExample').remove();
+                        }
+                        if(type == 40){
+                            $('.panel-title').text('已发货');
+                            $('#downloadExcel').remove();
+                        }
+                        $('#toolbar select[name="orderStatus"]').next().remove();
+                        $('#toolbar select[name="trackerStatus"]').next().remove();
+                        $('#toolbar input[name="datetimes1"]').next().hide();
+                        $('#toolbar input[name="affiliate"]').remove();
+                        $('#updateTracker').remove();
+                        $('#exportOrder').remove();
+                    }else{
+                        $('#uploadExcel').remove();
+                        $('#excelExample').remove();
+                        // 根据用户名加载update
+                        if(utils.cookie.getCookie('username') != 'archy' && utils.cookie.getCookie('username') != 'admin' ){
+                            $('#updateTracker').remove();
+                        }
+                        $('#downloadExcel').remove();
+                    }
+                    $('#toolbar.btn-group .btn').show()
+                }
+            },
+            event: {
+                selectAll: function (e, domList) {
+                    domList && domList.each(function () {
+                        if (e.is(':checked')) {
+                            if (!$(this).is(':checked')) {
+                                $(this).click();
+                            }
+                        } else {
+                            if ($(this).is(':checked')) {
+                                $(this).click();
+                            }
+                        }
+                    })
+                },
+                initDownload:function(){
+                    $("#downloadExcel").click(function(){
+                        app.methods.downloadExcel();
+                    })
+                },
+                init: function () {
+                    $('#table-products thead input[type="checkbox"]').on('click', function () {
+                        app.event.selectAll($(this), $('#table-products tbody input[type="checkbox"]'))
+                    })
+                    app.event.initDownload();
+                }
+            },
+            init: function () {
+                app.methods.initShow();
+                app.methods.initSelect2();
+                app.methods.initToolbar();
+                app.methods.initDatePicker();
+                app.methods.initUpload();
+                app.methods.initTable();
+                app.methods.initExportOrder();                
+				app.methods.enterKey();
+                app.event.init();
+            }
+        }
+
+        $(function () {
+            app.init();
+        });
+    </script>
+</html>

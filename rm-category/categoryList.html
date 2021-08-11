@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Home</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<!-- VENDOR CSS -->
+		<link rel="stylesheet" href="../dists/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../dists/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../dists/bootstrap-table/dist/bootstrap-table.min.css" />
+		<link rel="stylesheet" href="../dists/toastr/toastr.css" />
+		<link rel="stylesheet" href="../dists/hint/hint.css"/>
+        <link rel="stylesheet" href="../dists/select2/dist/css/select2.css" />
+        <link rel="stylesheet" href="../dists/input-tags/css/inputTags.css" />
+        <link rel="stylesheet" href="../dists/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" media="screen">
+		<!-- MAIN CSS -->
+		<link rel="stylesheet" href="../css/main.css?v=20200331">
+		<!-- GOOGLE FONTS -->
+		<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700" rel="stylesheet">
+		<style>
+			.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th{vertical-align: middle;}
+			#toolbar.btn-group .btn{margin-top: 2px;}
+			#toolbar.btn-group{width: 100%;}
+			#toolbar.btn-group .form-inline{display: inline-block;margin-left: 10px; float: right;}
+			.text-length{display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 2;overflow: hidden;font-weight: 500;font-size: 15px;min-height: 42px;}
+			.text-length-table-col{display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 3;overflow: hidden;}
+			.carousel-inner>.item>a>img, .carousel-inner>.item>img, .img-responsive, .thumbnail a>img, .thumbnail>img{cursor: pointer;}
+            .red {
+                color:red !important;
+            }
+            .btn-delete{position: absolute; right: 5px; top: 5px; outline: none;color: #d9534f; font-size: 20px;cursor: pointer;}
+            .btn-delete:hover{color: #c9302c;}
+            .plupload-image-column{width: 200px; height: 200px;margin: 10px;}
+            .plupload-image-column .thumbnail>img{width: 100%; max-height: 100%;}
+            .plupload-image-column .progress-bar{position: absolute;height: 20px;top: 90px;}
+
+            .type-body .type-child {
+                width: 150px;
+                margin-left: 20px;
+                float: left;
+            }
+
+            .datetimepicker table tr td span {
+                width: 5% !important;
+            }
+            .table-condensed{
+                min-width:650px !important;
+            }
+            .table-condensed>tbody>tr>td {
+                padding: 2px;
+            }
+            .datetimepicker .datetimepicker-minutes span {
+                height: 15px;
+                line-height: 15px;
+            }
+            
+            .modal{z-index: 2;}
+            .modal-backdrop{z-index: 1;}
+
+        </style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="panel panel-headline">
+				<div class="panel-heading">
+					<h3 class="panel-title">分类列表</h3>
+					<div class="right">
+						<button type="button" onclick="window.location.reload();"><i class="fa fa-refresh"></i></button>
+					</div>
+				</div>
+				<div class="panel-body">
+					<div id="toolbar" class="btn-group">
+					    <button type="button" class="btn btn-primary" onclick="app.methods.categoryCreate();"><i class="fa fa-plus-square"></i>&nbsp; 新增 </button>
+                        <button type="button" class="btn btn-success" onclick="app.icons.uploadIcons();"><i class="fa fa-upload"></i>&nbsp; 上传ICON </button>
+					    <button type="button" class="btn btn-success" onclick="app.methods.changeTableView();"><i class="fa fa-exchange"></i>&nbsp; 切换 </button>
+					    <button type="button" class="btn btn-info" onclick="app.methods.showSearchView();"><i class="fa fa-angle-double-up"></i></button>
+					    
+					    <div class="form-inline">
+						    <div class="form-group">
+						    	<input type="text" class="form-control" name="name" placeholder="分类名称">
+						    </div>
+						  	<button class="btn btn-primary" onclick="app.methods.searchTable();"><i class="fa fa-search"></i>&nbsp;&nbsp;查询</button>
+					    </div>
+					</div>
+					<table id="table-category"></table>
+				</div>
+			</div>
+		</div>
+        <div class="modal fade dialog-edit-category" role="dialog">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-wrapper">
+                        <div class="modal-menu">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">修改类别</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form role="form">
+                                    <div class="form-group">
+                                        <label class="control-label">名称</label>
+                                        <span class="red">*</span>
+                                        <div>
+                                            <input class="form-control" type="text" name="name"  placeholder="请填写类别名称"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label">类型</label>
+                                        <span class="red">*</span>
+                                        <div class="row type-body">
+                                            <div class="type-child">
+                                                <input type="radio" id="checkbox-B1" name="type" value="0" class="form-input" />
+                                                <label for="checkbox-A1">
+                                                    <span class="radio-dot checkbox-mark"></span>
+                                                    <span class="checkbox-text">轮播</span>
+                                                </label>
+                                            </div>
+                                            <div class="type-child">
+                                                <input type="radio" id="checkbox-B2" name="type" value="1" class="form-input"/>
+                                                <label for="checkbox-A2">
+                                                    <span class="radio-dot checkbox-mark"></span>
+                                                    <span class="checkbox-text">限时购</span>
+                                                </label>
+                                            </div>
+                                            <div class="type-child">
+                                                <input type="radio" id="checkbox-B3" name="type" value="2" class="form-input" checked/>
+                                                <label for="checkbox-A3">
+                                                    <span class="radio-dot checkbox-mark"></span>
+                                                    <span class="checkbox-text">普通</span>
+                                                </label>
+                                            </div>
+                                            <div class="type-child">
+                                                <input type="radio" id="checkbox-B4" name="type" value="3" class="form-input"/>
+                                                <label for="checkbox-A4">
+                                                    <span class="radio-dot checkbox-mark"></span>
+                                                    <span class="checkbox-text">营销</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label">副标题类型</label>
+                                        <span class="red">*</span>
+                                        <div>
+                                            <select class="select2" name="subheadType" style="width:100%"></select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group hide" id="tag-edit-area">
+                                        <label class="control-label">副标题</label>
+                                        <span class="red"></span>
+                                        <div>
+                                            <input class="form-control" type="text" name="subhead"  placeholder="请填写副标题(以,分隔)"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group hide" id="times-edit-area">
+                                        <label class="control-label">倒计时结束时间</label>
+                                        <div class="input-group date form_datetime" data-link-field="dtp_input1">
+                                            <input class="form-control" size="16" type="text" value="" name="times" readonly>
+                                            <span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span>
+                                        </div>
+                                        <input type="hidden" id="dtp_input1" value="" /><br/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label">优先级</label>
+                                        <span class="red">*</span>
+                                        <div>
+                                            <input class="form-control" type="number" min="0" name="priority"  placeholder="请填写优先级"/>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" commit>确定</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade dialog-create-category" role="dialog" data-backdrop="static">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-wrapper">
+                        <div class="modal-menu">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">新增类别</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form role="form">
+                                    <div class="form-group">
+                                        <label class="control-label">名称</label>
+                                        <span class="red">*</span>
+                                        <div>
+                                            <input class="form-control" type="text" name="name"  placeholder="请填写类别名称"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label">类型</label>
+                                        <span class="red">*</span>
+                                        <div class="row type-body">
+                                            <div class="type-child">
+                                                <input type="radio" id="checkbox-A1" name="type" value="0" data-id="0" class="form-input" />
+                                                <label for="checkbox-A1">
+                                                    <span class="radio-dot checkbox-mark"></span>
+                                                    <span class="checkbox-text">轮播</span>
+                                                </label>
+                                            </div>
+                                            <div class="type-child">
+                                                <input type="radio" id="checkbox-A2" name="type" value="1" data-id="1" class="form-input"/>
+                                                <label for="checkbox-A2">
+                                                    <span class="radio-dot checkbox-mark"></span>
+                                                    <span class="checkbox-text">限时购</span>
+                                                </label>
+                                            </div>
+                                            <div class="type-child">
+                                                <input type="radio" id="checkbox-A3" name="type" value="2" data-id="2" class="form-input" checked/>
+                                                <label for="checkbox-A3">
+                                                    <span class="radio-dot checkbox-mark"></span>
+                                                    <span class="checkbox-text">普通</span>
+                                                </label>
+                                            </div>
+                                            <div class="type-child">
+                                                <input type="radio" id="checkbox-A4" name="type" value="3" data-id="3" class="form-input"/>
+                                                <label for="checkbox-A4">
+                                                    <span class="radio-dot checkbox-mark"></span>
+                                                    <span class="checkbox-text">营销</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label">副标题类型</label>
+                                        <span class="red">*</span>
+                                        <div>
+                                            <select class="select2" name="subheadType" style="width:100%"></select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group hide" id="tag-create-area">
+                                        <label class="control-label">副标题</label>
+                                        <span class="red"></span>
+                                        <div>
+                                            <input class="form-control" type="text" name="subhead"  placeholder="请填写副标题(以,分隔)"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group hide" id="time-create-area">
+                                        <label class="control-label">倒计时结束时间</label>
+                                        <div class="input-group date form_datetime" data-link-field="dtp_input1">
+                                            <input class="form-control" size="16" type="text" value="" name="times" readonly>
+                                            <span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span>
+                                        </div>
+                                        <input type="hidden" id="dtp_input1" value="" /><br/>
+                                    </div>
+                                    <!--<div class="form-group">
+                                        <label class="control-label">icon</label>
+                                        <span class="red"></span>
+                                        <div class="row row-flex">
+                                            <div class="col-sm-4 col-md-3 col-lg-2">
+                                                <div class="icon-select-area" onclick="app.icons.uploadIconHander('single');" style="width:35px;height:35px;">
+                                                    <img src="../img/click-select-img.jpg" class="img-responsive">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>-->
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" commit>确定</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+	</body>
+	<script type="text/javascript" src="../dists/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../dists/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/bootstrap-table.js" ></script>
+	<script type="text/javascript" src="../dists/bootstrap-table/dist/locale/bootstrap-table-zh-CN.min.js" ></script>
+	<script type="text/javascript" src="../js/bootstrap-table-template.js"></script>
+	<script type="text/javascript" src="../dists/art-template/dist/template-native.js"></script>
+	<script type="text/javascript" src="../js/moment.js"></script>
+	<script type="text/javascript" src="../js/common.js?v=20200331"></script>
+	<script type="text/javascript" src="../dists/layer/layer.js"></script>
+	<script type="text/javascript" src="../dists/toastr/toastr.js"></script>
+    <script type="text/javascript" src="../dists/select2/dist/js/select2.js"></script>
+    <script type="text/javascript" src="../dists/summernote/dist/summernote.min.js"></script>
+    <script type="text/javascript" src="../dists/summernote/dist/lang/summernote-zh-CN.js"></script>
+    <script type="text/javascript" src="../dists/input-tags/js/inputTags.jquery.js" ></script>
+    <script type="text/javascript" src="../dists/plupload-2.3.6/js/plupload.full.min.js"></script>
+    <script type="text/javascript" src="../dists/plupload-2.3.6/js/i18n/zh_CN.js"></script>
+    <script type="text/javascript" src="../js/plupload-upload-icons.js"></script>
+    <script type="text/javascript" src="../dists/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>
+    <script type="text/javascript">
+        $('.form_datetime').datetimepicker({
+            todayBtn:  1,
+            forceParse: 0,
+            format: 'yyyy-mm-dd hh:ii:ss',
+            autoclose: true,
+            minuteStep:1,
+            pickerPosition: "bottom-left",
+            initialDate: new Date()
+        });
+    </script>
+    <script id="itemtpl" type="text/html">
+        <div class="col-sm-6 col-md-6">
+            <div class="thumbnail example">
+                <div class="panel" style="margin-bottom: 0px;">
+                    <div class="panel-heading">
+                        <div class="panel-title">
+                            <%=item.name?item.name:'无'%>
+                        </div>
+                        <div class="right">
+                            <span><%=item.subhead?item.subhead:''%></span>
+                            <button type="button" class="btn-toggle-collapse"><i class="lnr lnr-chevron-up"></i></button>
+                            <button type="button" class="btn-remove"><i class="lnr lnr-cross"></i></button>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row row-flex">
+                            <div class="col-sm-6 col-md-6">
+                                <div class="thumbnail example"  onclick="app.events.uploadCategoryImage(<%=item.id%>);">
+                                    <img style="min-height: 100px;" src="<%=item.imageUrl?item.imageUrl:'../img/upload-placeholder.jpg'%>" class="img-responsive">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-footer">
+                        <a href="#" class="btn btn-primary btn-xs" onclick="app.methods.categoryEdit(<%=item.id%>);" data-id="<%=item.id%>"><i class="fa fa-edit"></i>编辑</a>
+                        <a href="#" class="btn btn-danger btn-xs"  onclick="app.methods.categoryDelete(<%=item.id%>);" data-id="<%=item.id%>"><i class="fa fa-times"></i> 删除</a>
+	                    <span class="pull-right" style="margin-top:5px;">
+	                         <label class="fancy-checkbox"><input type="checkbox" data-id="<%=item.id%>"><span></span></label>
+	                    </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+	<script type="text/javascript">
+		var app = {
+			data : {
+				scopeId : utils.getURLParam('scopeId'),
+				table : $("#table-category"),
+                categoryTypes:[
+                    {id:0,text:"文字"},{id:1,text:"倒计时"}
+                ]
+			},
+			methods : {
+                showSearchView:function(){
+					$('#toolbar .form-inline').toggle('fast')
+					$('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-down')
+					$('#toolbar > button').eq(-1).find('i').toggleClass('fa-angle-double-up')
+				},
+				initTable : function(){
+					app.data.table.bootstrapTable({
+						pagination : true , 
+						cache: false,
+						sortable: false,
+						sidePagination: "server",
+						showColumns : true,
+						toolbar : '#toolbar',
+						templateView : false,
+						showHeader : true,
+						pageNumber : 1 , 
+						pageSize : 15 ,
+						pageList : [15 , 30 , 45 , 90],
+						toolbarAlign : 'left',
+						queryParamsType : 'page' , //When requesting remote data, you can send additional parameters by modifying queryParams. If queryParamsType = 'limit', the params object contains: limit, offset, search, sort, order Else, it contains: pageSize, pageNumber, searchText, sortName, sortOrder. Return false to stop request.
+						queryParams : function(params){
+							params.name = $('#toolbar input[name=name]').val();
+							params.size = params.pageSize;
+							params.page = parseInt(params.pageNumber)-1;
+							params.scopeId = app.data.scopeId;
+							return params;
+						},
+						url: utils.prePath() + '/api/admin/category/list',
+						totalField: 'body.totalElements',
+        				dataField: 'body.content',
+					    columns: [{
+                            field: 'imageUrl',
+                            title: '分类图',
+                            width : 80,
+                            align : 'center',
+                            formatter :  function(value, row, index, field) {
+                                if(value){
+                                    return '<a onclick="app.events.uploadCategoryImage('+row.id+')"><img src="'+value+'" alt="'+row.title+'" class="img-responsive" style="width:80px;height:80px;"></a>';
+                                }else{
+                                    return '<a onclick="app.events.uploadCategoryImage('+row.id+')"><img src="../img/upload-placeholder.jpg" alt="'+row.title+'" class="img-responsive" style="width:80px;height:80px;"></a>';
+                                }
+                            }
+                        }, {
+					        field: 'name',
+					        title: '名称',
+                            align : 'center',
+					        width : 200,
+					        formatter :  function(value, row, index, field) {
+					        	return   '<span class="text-length-table-col">'+(value || '--')+'</span>';
+							}
+					    }, {
+					        field: 'subhead',
+					        title: '副标题',
+                            align : 'center',
+					        width : 200,
+					        formatter :  function(value, row, index, field) {
+					        	return   '<span class="text-length-table-col">'+(value || '--')+'</span>';
+							}
+					    }, {
+                            field: 'type',
+                            title: '类型',
+                            align : 'center',
+                            width : 100,
+                            formatter :  function(value, row, index, field) {
+                                var statusHtml = '' ;
+                                switch (value){
+                                    case 0:
+                                        statusHtml = '<span class="label label-info">轮播</span>' ;
+                                        break;
+                                    case 1:
+                                        statusHtml = '<span class="label label-info">限时购</span>' ;
+                                        break;
+                                    case 2:
+                                        statusHtml = '<span class="label label-info">普通</span>' ;
+                                        break;
+                                    case 3:
+                                        statusHtml = '<span class="label label-info">营销</span>' ;
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                return statusHtml ;
+                            }
+                        },{
+					        field: 'subheadType',
+					        title: '副标题类型',
+                            align : 'center',
+					        width : 100,
+					        formatter :  function(value, row, index, field) {
+                                var statusHtml = '' ;
+                                switch (value){
+                                    case 0:
+                                        statusHtml = '<span class="label label-info">文字</span>' ;
+                                        break;
+                                    case 1:
+                                        statusHtml = '<span class="label label-info">倒计时</span>' ;
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                return statusHtml ;
+							}
+					    }, {
+					        field: 'priority',
+					        title: '优先级',
+                            align : 'center',
+					        width : 100,
+					        formatter :  function(value, row, index, field) {
+                                return   '<span class="label label-primary priority-edit" data-id="'+row.id+'">'+(value==undefined ?  '--':value)+'</span>';
+							}
+					    }, {
+					        field: 'limitation',
+					        title: '显示数量',
+                            align : 'center',
+					        width : 100,
+					        formatter :  function(value, row, index, field) {
+					        	var _limitation = value;
+					        	if(!_limitation){
+					        		switch (row.type){
+			                        	case 0: _limitation = 5; break;
+			                    		case 1: _limitation = 6; break;
+			                    		case 2: _limitation = 4; break;
+			                    		case 3: _limitation = 2; break;
+			                        	default: _limitation = '--'; break;
+			                        }
+					        	}
+                                return   '<span class="label label-success limitation-edit" data-id="'+row.id+'">'+_limitation+'</span>';
+							}
+					    },{
+					        title: '操作' , 
+					        align : 'center',
+					        width : 300,
+					        formatter :  function(value, row, index, field) {
+					        	return   '<div class="btn-group" role="group">'
+										+'  <a class="btn btn-info btn-xs" onclick="app.methods.categoryEdit('+row.id+')">编辑</a>'
+										+'  <a class="btn btn-danger btn-xs" onclick="app.methods.categoryDelete('+row.id+')">刪除</a>'
+                                        +'  <a class="btn btn-info btn-xs" onclick="app.methods.categoryProduct('+row.id+' , '+row.type+')">选择产品</a>'
+										+'</div>';
+							}
+					    }],
+					    onLoadSuccess : function(data){
+                            // 处理操作列最小宽度
+							$.each($('#table-category tr > td:last-child'), function (j, column) {
+					    		$(this).css('min-width' , '180px');
+							});
+					    	//处理图片显示
+							$('#table-category .thumbnail img').height($('#table-category .thumbnail img').width());
+							$('[data-toggle="tooltip"]').tooltip();
+
+                            $('span.priority-edit').off('click').on('click',function(){
+                                var _this = this;
+                                layer.prompt({title: '修改', value : $(_this).html() , formType: 3}, function(text, index){
+                                    $(_this).html(text);
+                                    layer.close(index);
+                                    var _param = {
+                                        'id':$(_this).data('id'),
+                                        'priority':text
+                                    };
+                                    $.ajax({
+                                        type : "put",
+                                        url : utils.prePath()+"/api/admin/category/"+$(_this).data('id'),
+                                        data : JSON.stringify(_param),
+                                        success : function(result){
+                                            if(result.statusCode == 'OK'){
+                                                //app.data.table.bootstrapTable('refresh');
+                                            }else{
+                                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                                            }
+                                        }
+                                    });
+                                });
+                            });
+                            
+                            $('span.limitation-edit').off('click').on('click',function(){
+                                var _this = this;
+                                layer.prompt({title: '修改', value : $(_this).html() , formType: 3}, function(text, index){
+                                    $(_this).html(text);
+                                    layer.close(index);
+                                    var _param = {
+                                        'id':$(_this).data('id'),
+                                        'limitation':text
+                                    };
+                                    $.ajax({
+                                        type : "put",
+                                        url : utils.prePath()+"/api/admin/category/"+$(_this).data('id'),
+                                        data : JSON.stringify(_param),
+                                        success : function(result){
+                                            if(result.statusCode == 'OK'){
+                                                //app.data.table.bootstrapTable('refresh');
+                                            }else{
+                                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                                            }
+                                        }
+                                    });
+                                });
+                            });
+                        },
+                        onLoadError : function(data){
+                            if(data == 403){
+								toastr.error('用户权限不足,如需操作,请联系管理员...');
+                            }
+                        }
+					});
+				},
+				changeTableView : function(){
+					var options = app.data.table.bootstrapTable('getOptions');
+                	app.data.table.bootstrapTable('refreshOptions', {templateView: !options.templateView , showHeader : !options.showHeader , showColumns : !options.showColumns});
+				},
+                categoryCreate: function(){
+                    var _this = this;
+                    var _modal= $(".dialog-create-category");
+                    _modal.modal({
+                        backdrop: 'static',
+                        keyboard: false,
+                        show:false
+                    });
+
+                    var categoryTypes = $('.select2[name="subheadType"]');
+                    var typeHtml = '';
+                    $.each(app.data.categoryTypes, function(k, v) {
+                        typeHtml += '<option value="' + v.id + '">' + v.text + '</option>';
+                    });
+                    categoryTypes.html(typeHtml);
+                    categoryTypes.select2();
+
+                    //modal初始化
+                    _modal.find("input").val("");
+                    $('.select2[name="subheadType"]  option[value="0"]',_modal).prop('selected',true).trigger('change');
+                    _modal.find(".inputTags-list").remove();
+                    _modal.find('input[name=subhead]').inputTags({minLength : 1 , maxLength: 10 ,max: 3});
+                    $('#time-create-area').addClass('hide');
+                    $('#tag-create-area').removeClass('hide');
+                    app.icons.chosenIconCallBack('');
+                    _modal.modal("show");
+
+                    _modal.find('.select2[name="subheadType"]').on('change', function(){
+                        var subheadType=_modal.find('.select2[name="subheadType"]').val();
+                        if(subheadType == 0){
+                            $('#time-create-area').addClass('hide');
+                            $('#tag-create-area').removeClass('hide');
+                        }else if(subheadType == 1){
+                            $('#time-create-area').removeClass('hide');
+                            $('#tag-create-area').addClass('hide');
+                        }
+                    });
+
+                    _modal.find('button[commit]').off('click').on('click',function(){
+                        var name = _modal.find('input[name=name]').val();
+                        if ("" == name){
+                            toastr.warning('分类名称不能为空...');
+                            _modal.find('input[name=name]').focus();
+                            return false;
+                        }
+                        var typeId = _modal.find('.type-child input[name=type]:checked').data('id');
+
+                        var subheadType = _modal.find('.select2[name="subheadType"]').val();
+                        if ("" == subheadType){
+                            toastr.warning('请选择副标题类型...');
+                            return false;
+                        }
+                        var _param = {
+                            name:name,
+                            type:typeId,
+                            subheadType:subheadType
+                        };
+                        
+                        switch (typeId){
+                        	case 0:
+                        		_param.limitation = 5;
+                        		break;
+                    		case 1:
+                    			_param.limitation = 6;
+                        		break;
+                    		case 2:
+                    			_param.limitation = 4;
+                        		break;
+                    		case 3:
+                    			_param.limitation = 2;
+                        		break;
+                        	default:
+                        		break;
+                        }
+
+
+                        var iconUrl =  _modal.find('#select-icon').attr('src');
+                        if(iconUrl){
+                            _param.iconUrl=iconUrl;
+                        }
+
+                        if(subheadType == 0){
+                            var subhead =_modal.find('input[name="subhead"]').attr('value');
+                            _param.subhead = subhead||"";
+                        }else if(subheadType == 1){
+                            var time = _modal.find('input[name="times"]').val();
+                            _param.subhead =time;
+                        }
+
+						_param.scopeId = app.data.scopeId;
+                        $.ajax({
+                            type : "POST",
+                            url : utils.prePath()+"/api/admin/category",
+                            data : JSON.stringify(_param),
+                            success : function(result){
+                                _modal.modal("hide");
+                                if(result.statusCode == 'OK'){
+                                    app.data.table.bootstrapTable('refresh');
+                                }else{
+                                    toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                                }
+                            }
+                        });
+                    });
+                },
+                categoryEdit: function(categoryId){
+                    var _this = this;
+                    var _modal= $(".dialog-edit-category");
+                    _modal.modal({
+                        backdrop: 'static',
+                        keyboard: false,
+                        show:false
+                    });
+
+                    var categoryTypes = $('.select2[name="subheadType"]');
+                    var typeHtml = '';
+                    $.each(app.data.categoryTypes, function(k, v) {
+                        typeHtml += '<option value="' + v.id + '">' + v.text + '</option>';
+                    });
+                    categoryTypes.html(typeHtml);
+                    categoryTypes.select2();
+
+                    $.ajax({
+                        type:"get",
+                        url : utils.prePath()+"/api/admin/category/" + categoryId,
+                        async: false,
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                var category = result.body;
+                                _modal.find('input[name="name"]').val(category.name);
+                                _modal.find('.type-child input[name=type][value="'+category.type+'"]').prop('checked',true).trigger('change');
+                                $('.select2[name="subheadType"]  option[value="'+category.subheadType+'"]',_modal).prop('selected',true).trigger('change');
+                                _modal.find('input[name="priority"]').val(category.priority);
+                                if(category.subheadType == 0){
+                                    $('#times-edit-area').addClass('hide');
+                                    $('#tag-edit-area').removeClass('hide');
+                                    $(".inputTags-list").remove();
+                                    _modal.find('input[name="subhead"]').val('');
+                                    var tags=[];
+                                    if(category.subhead){
+                                        tags=category.subhead.split(',');
+                                    }
+                                    _modal.find('input[name="subhead"]').inputTags({tags :tags  , minLength : 1 , maxLength: 10 ,max: 3});
+                                }else{
+                                    $('#times-edit-area').removeClass('hide');
+                                    $('#tag-edit-area').addClass('hide');
+                                    _modal.find('input[name="times"]').val(category.subhead);
+                                    $(".inputTags-list").remove();
+                                    _modal.find('input[name="subhead"]').val('');
+                                    _modal.find('input[name="subhead"]').inputTags({tags :[]  , minLength : 1 , maxLength: 10 ,max: 3});
+                                }
+                                if(category.iconUrl){
+                                    app.icons.chosenIconCallBack(category.iconUrl);
+                                }else{
+                                    app.icons.chosenIconCallBack('');
+                                }
+                                _modal.modal("show");
+                            }
+                        }
+                    });
+
+
+                    _modal.find('.select2[name="subheadType"]').on('change', function(){
+                        var subheadType=_modal.find('.select2[name="subheadType"]').val();
+                        if(subheadType == 0){
+                            $('#times-edit-area').addClass('hide');
+                            $('#tag-edit-area').removeClass('hide');
+                        }else if(subheadType == 1){
+                            $('#times-edit-area').removeClass('hide');
+                            $('#tag-edit-area').addClass('hide');
+                        }
+                    });
+
+                    _modal.find('button[commit]').off('click').on('click',function(){
+                        var name = _modal.find('input[name=name]').val();
+                        if ("" == name){
+                            toastr.warning('分类名称不能为空...');
+                            _modal.find('input[name=name]').focus();
+                            return false;
+                        }
+                        var typeId = _modal.find('.type-child input[name=type]:checked').val();
+                        if ("" == typeId){
+                            toastr.warning('请选择类型...');
+                            return false;
+                        }
+
+                        var subheadType = _modal.find('.select2[name="subheadType"]').val();
+                        if ("" == subheadType){
+                            toastr.warning('请选择副标题类型...');
+                            return false;
+                        }
+                        var priority = _modal.find('input[name=priority]').val();
+                        if ("" == priority){
+                            toastr.warning('优先级不能为空...');
+                            _modal.find('input[name=priority]').focus();
+                            return false;
+                        }
+                        var _param = {
+                            name:name,
+                            type:typeId,
+                            subheadType:subheadType,
+                            priority:priority
+                        };
+
+                        var iconUrl =  _modal.find('#select-icon').attr('src');
+                        if(iconUrl){
+                            _param.iconUrl=iconUrl;
+                        }
+
+                        if(subheadType == 0){
+                            var subhead = _modal.find('input[name="subhead"]').attr('value');
+                            _param.subhead = subhead||"";
+                        }else if(subheadType == 1){
+                            var time = _modal.find('input[name="times"]').val();
+                            _param.subhead =time;
+                        }
+
+						_param.scopeId = app.data.scopeId;
+                        $.ajax({
+                            type : "PUT",
+                            url : utils.prePath()+"/api/admin/category/"+ categoryId,
+                            data : JSON.stringify(_param),
+                            success : function(result){
+                                _modal.modal("hide");
+                                if(result.statusCode == 'OK'){
+                                    app.data.table.bootstrapTable('refresh');
+                                }else{
+                                    toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                                }
+                            }
+                        });
+                    });
+                },
+				categoryProduct : function(categoryId , type){//分类详情
+					var index = layer.open({
+					  	type: 2,
+					  	content: 'categoryProduct.html?scopeId='+app.data.scopeId+'&id=' + categoryId + '&type=' + type,
+					  	area: [$(window).width() + 'px' , $(window).height() + 'px']
+					});
+				},
+				categoryDelete : function(categoryId){//产品详情
+                    layer.confirm('确定要删除该分类吗?', {
+                        btn: ['确定','取消'] //按钮
+                    }, function(index){
+                        layer.close(index);
+                        $.ajax({
+                            type : "DELETE",
+                            url : utils.prePath()+"/api/admin/category/" + categoryId,
+                            success : function(result){
+                                if(result.statusCode == 'OK'){
+                                    app.data.table.bootstrapTable('refresh');
+                                }else{
+                                    toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                                }
+                            }
+                        });
+                    });
+                },
+				productStatus : function(productId , status){//产品下架
+					$.ajax({
+						type : "PUT",
+						url : utils.prePath()+"/api/admin/product/" + productId,
+						data : JSON.stringify({'status' : status}),
+						success : function(result){
+							if(result.statusCode == 'OK'){
+								app.data.table.bootstrapTable('refresh');
+							}else{
+								toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+							}
+						}
+					});
+				},
+				searchTable : function(){
+					app.data.table.bootstrapTable('refresh');
+				},
+				enterKey : function(){
+					$('#toolbar').keyup(function(event){
+					  	if(event.keyCode ==13){
+					    	app.methods.searchTable();
+					  	}
+					});
+				}
+			},
+            icons : {
+                uploadIconHander : function(type){
+                    var self = this;
+                    if(type == 'single'){
+                        self.chosenIconsSingle(self.chosenIconCallBack);
+                    }else{
+                        self.chosenIconsInTable(self.chosenIconInTableCallBack,type);
+                    }
+                },
+                chosenIconsSingle: function(callback){
+                    $.ajax({
+                        type:"get",
+                        url : utils.prePath()+"/api/admin/category/icons",
+                        async: false,
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                var html = '<div class="row row-flex img-container">' ;
+                                $.each(result.body, function(index, temp){
+                                    html +=  '	<div class="col-sm-4 col-md-3">'
+                                            +'	    <div  src="'+temp+'" class="example" onclick="$(\'.img-container .example.active\').removeClass(\'active\');$(this).addClass(\'active\');">'
+                                            +'	        <img src="'+temp+'" class="img-responsive" alt="">'
+                                            +'	        <i class="fa fa-3x fa-check-circle-o img-check"></i>'
+                                            +'	    </div>'
+                                            +'	</div>';
+                                });
+                                html += '</div>';
+
+                                layer.open({
+                                    type: 1,
+                                    title : '图片选择器',
+                                    offset: '50px',
+                                    area: ['750px', '550px'], //宽高
+                                    content: html,
+                                    btn: ['确定', '取消'] ,
+                                    btnAlign: 'c',
+                                    yes: function(index, layero){
+                                        $.each($('.img-container .example.active'), function(index , temp) {
+                                            callback($(temp).attr('src'));
+                                        });
+                                        layer.close(index);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                },
+                chosenIconsSingleCallBack : function(imgSrc){
+                    $('.icon-single').prevAll().remove();
+                    var html =  '<div class="col-sm-1 col-md-1">'
+                            +'    <div class="thumbnail example">'
+                            +'        <img src="'+imgSrc+'" class="img-responsive">'
+                            +'    </div>'
+                            +'</div>';
+                    $('.icon-single').before(html);
+                },
+                chosenIconCallBack : function(imgSrc){
+                    if(imgSrc){
+                        $('.icon-select-area').empty().append('<img id="select-icon" src="'+imgSrc+'" class="img-responsive">');
+                    }else{
+                        $('.icon-select-area').empty().append('<img src="../img/click-select-img.jpg" class="img-responsive">');
+                    }
+                },
+                chosenIconsInTable: function(callback,id){
+                    $.ajax({
+                        type:"get",
+                        url : utils.prePath()+"/api/admin/category/icons",
+                        async: false,
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                var html = '<div class="row row-flex img-container">' ;
+                                $.each(result.body, function(index, temp){
+                                    html +=  '	<div class="col-sm-4 col-md-3">'
+                                        +'	    <div  src="'+temp+'" class="example" onclick="$(\'.img-container .example.active\').removeClass(\'active\');$(this).addClass(\'active\');">'
+                                        +'	        <img src="'+temp+'" class="img-responsive" alt="">'
+                                        +'	        <i class="fa fa-3x fa-check-circle-o img-check"></i>'
+                                        +'	    </div>'
+                                        +'	</div>';
+                                });
+                                html += '</div>';
+
+                                layer.open({
+                                    type: 1,
+                                    title : '图片选择器',
+                                    offset: '50px',
+                                    area: ['750px', '550px'], //宽高
+                                    content: html,
+                                    btn: ['确定', '取消'] ,
+                                    btnAlign: 'c',
+                                    yes: function(index, layero){
+                                        $.each($('.img-container .example.active'), function(index , temp) {
+                                            callback($(temp).attr('src'),id);
+                                        });
+                                        layer.close(index);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                },
+                chosenIconInTableCallBack : function(imgSrc,id){
+                    var _param={
+                        iconUrl:imgSrc
+                    };
+                    $.ajax({
+                        type : "PUT",
+                        url : utils.prePath()+"/api/admin/category/"+ id,
+                        data : JSON.stringify(_param),
+                        success : function(result){
+                            if(result.statusCode == 'OK'){
+                                app.data.table.bootstrapTable('refresh');
+                            }else{
+                                toastr.error((result.body && result.body.message) ? result.body.message : '系统异常,请稍候重试或联系开发人员...');
+                            }
+                        }
+                    });
+                },
+                uploadIcons : function(){
+                    pluploadLayer.initPanel(app.icons.afterUploadIcons);
+                },
+                afterUploadIcons : function(){
+                    //刷新表格
+                    app.data.table.bootstrapTable('refresh');
+                }
+            },
+			events : {
+                uploadCategoryImage : function(categoryId){
+                    pluploadLayerSingle.initPanel(app.events.afterUploadImage,categoryId);
+                },
+                afterUploadImage : function(){
+                    //刷新表格
+                    app.data.table.bootstrapTable('refresh');
+                }
+			},
+			init : function(){
+				app.methods.initTable();
+				app.methods.enterKey();
+			}
+		}
+		
+		$(function(){
+			app.init();
+		});
+	</script>
+</html>
